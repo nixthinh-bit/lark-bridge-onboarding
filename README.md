@@ -1,488 +1,193 @@
 # lark-bridge-onboarding
 
-> **A fork of [zarazhangrui/lark-coding-agent-bridge](https://github.com/zarazhangrui/lark-coding-agent-bridge).** All credit for the bridge itself belongs to the original project and its contributors — the engine is their work, not mine.
+> **Đây là bản fork của [zarazhangrui/lark-coding-agent-bridge](https://github.com/zarazhangrui/lark-coding-agent-bridge).** Toàn bộ công lao làm ra bridge thuộc về dự án gốc — phần máy móc bên dưới là của họ, không phải của bản fork này.
 >
-> This fork adds one layer on top: onboarding for people who don't write code. A single install command, a bilingual (English / Tiếng Việt) walkthrough, translated wizard prompts, and plain-language model presets.
->
-> **If you are comfortable in a terminal, use [the upstream project](https://github.com/zarazhangrui/lark-coding-agent-bridge) directly — you do not need this fork.**
+> Bản fork chỉ thêm một lớp: hướng dẫn cài đặt cho người không viết code. Nếu bạn dùng terminal thành thạo, **hãy dùng thẳng [bản gốc](https://github.com/zarazhangrui/lark-coding-agent-bridge)** — bạn không cần bản này.
 
-A lightweight bot that bridges Feishu / Lark messenger with your local Claude Code or Codex CLI. Run one command, scan a QR code to bind a PersonalAgent app, and talk to your local coding agent from chat.
+**Nhắn tin cho Claude Code ngay trong Lark — kể cả khi bạn đang ở ngoài đường.**
 
-[中文 README](./README.zh.md) · [README Tiếng Việt](./README.vi.md)
-
-For a product walkthrough, see the [Feishu document](https://larkcommunity.feishu.cn/docx/OaRIdFIRFoLM3xxTmKwcetHqn5e).
+[English](./README.en.md) · [中文](./README.zh.md)
 
 ---
 
-# Start here
+## 1. Cái này là gì, và khác `lark-cli` chỗ nào?
 
-*New to this? Read these seven points first — they answer the questions people actually get stuck on. Everything below this section is upstream's reference documentation.*
+Nếu bạn từng dùng `lark-cli`, đây là chỗ dễ nhầm nhất. Hai thứ **ngược chiều nhau**:
 
-**🇻🇳 Người Việt: [đọc bản tiếng Việt đầy đủ tại đây](./README.vi.md).**
-
-### 1. How is this different from `lark-cli`?
-
-If you have used `lark-cli`, this is the easiest thing to confuse. They point in **opposite directions**:
-
-| | **lark-cli** | **Bridge** (this project) |
+| | **lark-cli** | **Bridge** (cái này) |
 |---|---|---|
-| Where you sit | **At your computer**, typing in a terminal | **In Lark** — your phone works too |
-| What Lark is | **The thing being worked on** — Claude reaches *out* to edit Docs, Bases, send messages | **A remote keyboard** — Lark pushes commands *in* to your machine |
-| What your computer is | Where you happen to be sitting | **Where Claude runs — it must stay on** |
+| Bạn ngồi ở đâu | **Trước máy tính**, gõ terminal | **Trong Lark** — điện thoại cũng được |
+| Lark đóng vai gì | **Đối tượng làm việc** — Claude vươn *ra* sửa Doc, Base, gửi tin | **Bàn phím từ xa** — Lark đẩy lệnh *vào* máy bạn |
+| Máy tính đóng vai gì | Nơi bạn đang ngồi | **Nơi Claude chạy — phải luôn bật** |
 
-> **lark-cli** lets Claude *work on Lark*.
-> **Bridge** lets you *drive Claude from Lark*.
+Một câu cho dễ nhớ:
 
-They are separate Lark apps, so installing one does not affect the other. Used together they compound: message from your phone → the bridge wakes Claude at home → Claude uses lark-cli to edit your Base.
+> **lark-cli** cho Claude *làm việc trên Lark*.
+> **Bridge** cho bạn *điều khiển Claude từ Lark*.
 
-### 2. ⚠️ Your computer must stay on
+Vì ngược chiều nhau nên chúng là **hai ứng dụng Lark khác nhau**. Cài cái này không ảnh hưởng cái kia, và bạn không cần bỏ cái nào cả.
 
-**The bot only answers while your computer is awake.**
+**Hai cái dùng chung thì rất mạnh:** bạn nhắn từ điện thoại → bridge đánh thức Claude ở nhà → Claude dùng lark-cli sửa Base giúp bạn.
 
-This is a deliberate design choice, not a limitation to work around: the bridge is **not a cloud service**. Your code and files never leave your machine, it uses your own Claude account, and your data stays local. The price is that the machine has to be alive.
+## 2. ⚠️ Đọc cái này trước khi cài
 
-- **Computer off** → the bot is dead.
-- **Asleep, or laptop lid closed** → also dead. This is the one that surprises people.
-- **Network drops** → temporarily out; the bridge reconnects on its own.
+**Bot chỉ trả lời khi máy tính của bạn đang bật và không ngủ.**
 
-Messages sent while the machine is off are **not processed later** — you have to resend them.
+Đây không phải lỗi — mà là chủ ý thiết kế. Bridge **không phải dịch vụ đám mây**: code và file của bạn không rời khỏi máy, token dùng tài khoản của chính bạn, dữ liệu nằm ở local. Cái giá phải trả là **máy phải sống**.
 
-### 3. What you need first
+Cụ thể, ba trường hợp đều làm bot ngừng trả lời:
 
-| | Required? | If missing |
+- **Tắt máy** → bot chết.
+- **Máy ngủ / gập nắp MacBook** → bot cũng chết. Đây là cái hay bị bất ngờ nhất.
+- **Mất mạng** → tạm ngừng, nhưng bridge tự kết nối lại khi có mạng.
+
+Tin nhắn gửi lúc máy tắt sẽ **không được xử lý sau** — bật máy lên phải nhắn lại.
+
+**Cách xử lý:**
+
+1. Dùng máy để bàn cắm điện 24/7 (đơn giản nhất, đúng tinh thần nhất).
+2. Nếu dùng laptop: chỉnh máy không ngủ khi cắm sạc. Lưu ý **gập nắp là vẫn ngủ**, trừ khi có màn hình ngoài.
+3. Chạy trên VPS cũng được — nhưng khi đó code của bạn phải nằm trên VPS, và nó không còn là "điều khiển máy của tôi" nữa.
+
+## 3. Cần chuẩn bị gì
+
+| Thứ cần | Bắt buộc? | Thiếu thì sao |
 |---|---|---|
-| **Node.js ≥ 20.12** | ✅ Required | Won't install |
-| **Claude Code (`claude`)** | ✅ **Required** | **The bot won't run** — this is the brain |
-| **lark-cli** | ⚠️ Recommended | The bot runs, but **can't touch Lark** (no cards, no Doc/Base access) |
+| **Node.js ≥ 20.12** | ✅ Bắt buộc | Không cài được |
+| **Claude Code (`claude`)** | ✅ **Bắt buộc** | **Bot không chạy** — đây là bộ não |
+| **lark-cli** | ⚠️ Nên có | Bot vẫn chạy, nhưng **không đụng được vào Lark** (không gửi thẻ, không sửa Doc/Base) |
 
-The bridge does not think for itself — it drives the `claude` **already installed on your machine**. Check with `claude --version`; if that fails:
+### Claude Code — bắt buộc
+
+Bridge không tự nghĩ. Nó chỉ đánh thức `claude` **đã cài sẵn trên máy bạn**. Kiểm tra:
+
+```bash
+claude --version
+```
+
+Nếu báo `command not found`:
 
 ```bash
 npm i -g @anthropic-ai/claude-code
 claude auth login
 ```
 
-> Installing the **Claude desktop app is not enough** — it does not ship the `claude` command.
+> **Lưu ý:** cài app **Claude cho máy tính** (Claude.app) là **chưa đủ** — app đó không kèm lệnh `claude`. Phải cài riêng bằng lệnh trên.
 
-The bridge can auto-install lark-cli, **but only in interactive mode**. Start it as a background service first and it silently skips that step, leaving you wondering why the bot can't reach Lark. Installing lark-cli up front avoids the trap entirely: **[lark-cli-onboarding](https://github.com/nixthinh-bit/lark-cli-onboarding)**.
+### lark-cli — nên cài trước
 
-### 4. Install
+Bridge có tự cài lark-cli, **nhưng chỉ khi bạn chạy nó ở chế độ tương tác**. Nếu bạn khởi động dạng dịch vụ nền trước, nó **lặng lẽ bỏ qua** và bạn sẽ ngồi thắc mắc sao bot không đụng được vào Lark.
+
+Cài trước thì tránh hẳn được cái bẫy đó:
+
+👉 **[github.com/nixthinh-bit/lark-cli-onboarding](https://github.com/nixthinh-bit/lark-cli-onboarding)** — cài lark-cli, skill, và tự động gia hạn token.
+
+## 4. Cài bridge
 
 ```bash
 npm i -g github:nixthinh-bit/lark-bridge-onboarding
 ```
 
-> ⚠️ **Already have upstream installed?** This **replaces** it — both share the `lark-channel-bridge` command name. It is a drop-in replacement, so every upstream command still works. To go back: `npm i -g lark-channel-bridge`.
+> ⚠️ **Nếu bạn đã cài bản gốc của Zara** (`npm i -g lark-channel-bridge`): lệnh trên **đè lên bản đó**, vì hai bản dùng chung tên lệnh `lark-channel-bridge`. Đây là bản thay thế drop-in — mọi lệnh của bản gốc vẫn chạy y hệt. Muốn quay về bản gốc: `npm i -g lark-channel-bridge`.
+>
+> Nếu bạn chưa từng nghe tới bản gốc thì cứ bỏ qua đoạn này.
 
-### 5. First run — just scan the QR code
-
-```bash
-lark-channel-bridge run
-```
-
-**You do not need to open a developer console, create an app by hand, or copy an App ID or App Secret.** The wizard does all of it:
-
-1. A **QR code** appears in your terminal.
-2. Scan it with the **Lark app on your phone**.
-3. The Lark app is **created automatically**, with permissions pre-filled.
-4. Done — config is written to `~/.lark-channel/config.json`.
-
-Whoever scans the QR becomes the app owner, so you can message the bot immediately.
-
-Use `--lang vi` (or `en`, `zh`) to override the language detected from your OS locale.
-
-> **On international Lark?** The wizard detects it and switches to `larksuite.com` on its own.
-> **App creation blocked?** Some organizations require admin approval — ask your Lark admin.
-
-### 6. Pick a model — and protect your 5-hour window
-
-Message `/config` to the bot; the card has a model picker.
-
-The bridge **spends no tokens of its own**, but every message you send is **a real Claude Code turn** on your machine:
-
-- `claude` logged in with a **subscription (Pro/Max)** → each message **counts against the same 5-hour window** as terminal use. There is no separate quota.
-- `claude` logged in with an **API key** → billed per token, with **no** 5-hour window.
-
-⚠️ Firing off requests from your phone is easy, so the window burns faster than you'd expect. Drop to Haiku for light work; save Opus for what needs it.
-
-### 7. 🔒 Tighten access before you use it
-
-Only you — the person who scanned the QR — can use the bot by default. But:
-
-> **Don't run `/invite group`** unless you mean it. Allowing a group lets **every member of that group** drive Claude on your machine — reading files, editing them, running commands.
-
-Prefer `/invite user @name`. And consider lowering the permission mode from the `full` default to `workspace` or `read-only` — see [Permission modes](#permission-modes) below.
-
----
-
-*The rest of this file is upstream's reference documentation.*
-
-## What it does
-
-- Forwards Feishu / Lark messages to local Claude Code or Codex CLI. Send a DM directly, or `@bot` in a group.
-- **Streaming card**: text replies and tool calls update on one Lark card in real time.
-- **COT process messages**: optionally send a process message with agent progress text and tool calls, then send the final answer separately.
-- **Session continuity**: each chat, topic, or document comment thread keeps its own session.
-- **Queueing and batching**: messages sent in quick succession are handled together; messages sent during a run are queued for the next turn, while commands like `/new`, `/cd`, `/ws use`, and `/stop` can interrupt the current task.
-- **Multiple workspaces**: use `/cd` to switch the current project, and `/ws` to save and reuse common project directories.
-- **Images and files**: send them to the bot directly, and the bridge downloads them locally for the agent.
-- **Interactive cards**: `/help`, `/ws list`, and `/status` return cards with clickable buttons.
-
-## Prerequisites
-
-- Node.js **>= 20.12.0**
-- At least one local agent installed and logged in:
-  - Claude Code: `claude`, see https://docs.anthropic.com/en/docs/claude-code/quickstart
-  - Codex CLI: `codex`, see https://developers.openai.com/codex/cli
-- A Feishu / Lark **PersonalAgent** app. The first-run QR wizard can create and bind one for you.
-
-## Install
-
-```bash
-npm i -g lark-channel-bridge
-# or
-pnpm add -g lark-channel-bridge
-```
-
-## First run
+## 5. Chạy lần đầu — quét QR là xong
 
 ```bash
 lark-channel-bridge run
 ```
 
-The first run opens a QR-code wizard:
+**Bạn KHÔNG cần vào trang dành cho lập trình viên. KHÔNG cần tự tạo ứng dụng. KHÔNG cần copy App ID hay App Secret.** Trình hướng dẫn lo hết:
 
-1. A QR code renders in your terminal.
-2. Scan it with the Feishu / Lark app.
-3. Pick or create a PersonalAgent app.
-4. If prompted, choose which agent to initialize.
-5. Config is written to `~/.lark-channel/config.json`.
+1. Terminal hiện ra một **mã QR**.
+2. Mở **app Lark trên điện thoại**, quét mã đó.
+3. Ứng dụng Lark được **tạo tự động**, quyền cũng được điền sẵn.
+4. Xong. Cấu hình lưu vào `~/.lark-channel/config.json`.
 
-You do not need to choose a project directory up front. The bridge creates a profile-managed default working directory; after startup, send `/cd <path>` in Feishu / Lark to switch to a real project.
+Người quét mã QR **tự động trở thành chủ ứng dụng**, nên bạn nhắn được cho bot ngay từ tin đầu tiên mà không phải chỉnh gì.
 
-If you already have a PersonalAgent app, pass `--app-id` during initialization to skip app creation. The command prompts for the App Secret.
-
-```bash
-lark-channel-bridge run --app-id cli_xxx
-# or initialize and start the background service directly
-lark-channel-bridge start --app-id cli_xxx
-```
-
-For Lark global apps, add `--tenant lark`.
-
-## Background service
-
-Use `run` for first-run setup and foreground debugging. After the bot can send and receive messages, stop the foreground process with `Ctrl-C`, then use an OS-managed service for background operation:
+Muốn giao diện tiếng Việt (nếu máy bạn đang để tiếng Anh):
 
 ```bash
-lark-channel-bridge start
-lark-channel-bridge status
-lark-channel-bridge stop
+lark-channel-bridge --lang vi run
 ```
 
-Install globally before using service commands. The daemon's launchd plist / systemd unit / Windows task records the bridge CLI path; if that path comes from an npm temp cache through `npx`, the daemon can break when the cache is cleaned. `run` is fine through `npx` as a one-shot foreground process.
+> **Dùng Lark bản quốc tế?** Trình hướng dẫn tự nhận ra và chuyển sang `larksuite.com`, bạn không phải làm gì.
+>
+> **Công ty bạn chặn tạo ứng dụng?** Một số tổ chức bắt quản trị viên duyệt trước. Nếu bị từ chối, hãy nhờ admin Lark của công ty.
 
-Service commands install a per-profile service:
+Chạy nền để khỏi phải mở terminal suốt:
 
 ```bash
-lark-channel-bridge start [--profile <name>]
-lark-channel-bridge stop [--profile <name>]
-lark-channel-bridge restart [--profile <name>]
-lark-channel-bridge status [--profile <name>]
-lark-channel-bridge unregister [--profile <name>]
+lark-channel-bridge start     # bật chạy nền
+lark-channel-bridge status    # xem còn sống không
+lark-channel-bridge stop      # tắt
 ```
 
-Platform mapping:
-- **macOS**: launchd user agent `ai.lark-channel-bridge.bot.<profile>`
-- **Linux**: systemd user unit `lark-channel-bridge.bot.<profile>.service`
-- **Windows**: Task Scheduler task `LarkChannelBridge.Bot.<profile>`, launched through a `.cmd` wrapper
+## 6. Chọn model — và giữ gói token 5 giờ
 
-Daemon logs are under `~/.lark-channel/profiles/<profile>/logs/daemon/`.
+Trong Lark, nhắn cho bot:
 
-### Multiple profiles: Claude and Codex
-
-By default, the bridge starts with the currently selected profile. Use `profile use <name>` to change it. Each profile keeps its own app credentials, sessions, working directories, and logs. Create multiple profiles only when you need to connect multiple PersonalAgent apps, or run Claude and Codex as separate bots:
-
-```bash
-lark-channel-bridge start --profile claude --agent claude
-lark-channel-bridge start --profile codex --agent codex
+```
+/config
 ```
 
-For example, to restart only the Codex bot:
+Thẻ hiện ra có ô chọn model: **Opus 4.8 / 4.7, Sonnet 5 / 4.6, Haiku 4.5, Opus Plan**.
 
-```bash
-lark-channel-bridge restart --profile codex
-lark-channel-bridge status --profile codex
+**Điều quan trọng cần hiểu về token:** bridge **không tự tiêu token**. Nhưng mỗi tin nhắn bạn gửi qua Lark = **một lượt Claude Code chạy thật** trên máy bạn.
+
+- Nếu `claude` đăng nhập bằng **gói thuê bao (Pro/Max)** → mỗi tin **ăn vào đúng cửa sổ 5 giờ** như khi bạn gõ trong terminal. Không có hạn mức riêng.
+- Nếu đăng nhập bằng **API key** → tính tiền theo token, **không có** cửa sổ 5 giờ.
+
+⚠️ Vì giờ bắn lệnh từ điện thoại quá dễ, **bạn sẽ đốt hết cửa sổ 5 giờ nhanh hơn bạn tưởng**. Mẹo: việc nhẹ thì hạ xuống Haiku, để dành Opus cho việc thật sự khó.
+
+## 7. 🔒 Siết quyền — làm ngay, đừng để sau
+
+Mặc định đã khá an toàn: **chỉ mình bạn** (người quét mã QR) dùng được bot.
+
+Nhưng có một cái bẫy:
+
+> **Đừng gõ `/invite group`** trừ khi bạn thật sự hiểu hậu quả.
+>
+> Khi một nhóm được cho phép, **MỌI thành viên trong nhóm đó** đều ra lệnh được cho Claude trên máy bạn — đọc file, sửa file, chạy lệnh.
+
+Nên cho từng người một:
+
+```
+/invite user @Tên người đó
 ```
 
-## Commands
+Và cân nhắc hạ quyền của bot. Mặc định là `full` (Claude làm gì cũng được trên máy bạn):
 
-### Host CLI
-
-```text
-lark-channel-bridge run [--profile <name>] [--agent claude|codex] [--workspace <path>] [-c <config>]
-lark-channel-bridge migrate [--profile <name>] [--agent claude|codex]
-lark-channel-bridge ps
-lark-channel-bridge kill <id|#>
-lark-channel-bridge --help
-```
-
-`profile use <name>` changes the profile used by later default starts. Use these profile management commands when running separate Claude / Codex bots, connecting multiple PersonalAgent apps, or doing scripted deployment:
-
-```bash
-lark-channel-bridge profile create claude --agent claude
-lark-channel-bridge profile create codex --agent codex
-lark-channel-bridge profile list
-lark-channel-bridge profile use <name>
-lark-channel-bridge profile remove <name>
-lark-channel-bridge profile remove <name> --purge --yes
-lark-channel-bridge profile export <name> [--output ./profile.json] [--force]
-lark-channel-bridge profile export <name> --include-secrets --yes
-```
-
-`profile remove` archives local state by default, including the active profile. If other profiles remain, the bridge switches to the next one; if it was the last profile, the root config is cleared so the same name can be created again. `--purge --yes` permanently deletes local state. `profile export` redacts app secrets by default; `--include-secrets --yes` includes sensitive config.
-
-If a profile was created with the wrong agent kind, stop or unregister any matching background service first, then run `profile remove <name>` and recreate it with the intended `--agent`.
-
-### Slash commands inside Feishu / Lark
-
-| Command | Effect |
+| Mức | Claude được làm gì |
 |---|---|
-| `/new`, `/reset` | Clear the current session |
-| `/cd <path>` | Switch working directory and reset the session |
-| `/ws list` | List named workspaces |
-| `/ws save <name>` | Save the current working directory as a named workspace |
-| `/ws use <name>` | Switch to a named workspace |
-| `/ws remove <name>` | Delete a named workspace |
-| `/resume` | Resume compatible history for the same agent, working directory, and permission mode |
-| `/status` | Show profile, agent, working directory, session, lark-cli identity, and run state |
-| `/config` | Adjust presentation preferences, access settings, and lark-cli identity policy |
-| `/invite user @name` | Allow a user to use the bot in DMs |
-| `/invite admin @name` | Add an access-control admin |
-| `/invite group` | Allow the current group to use the bot |
-| `/invite all group` | Allow all groups the bot has joined |
-| `/remove user @name`, `/remove admin @name`, `/remove group` | Remove access entries |
-| `/stop` | Stop the current run, including the card stop button |
-| `/timeout [N\|off\|default]` | Set or clear the current session idle watchdog |
-| `/ps` | List local bridge processes |
-| `/exit <id\|#>` | Stop a bridge process |
-| `/reconnect` | Force a WebSocket reconnect |
-| `/doctor [description]` | Run low-sensitive diagnostics |
-| `/help` | Help card |
+| `full` | **Mọi thứ** — đọc, sửa, xoá, chạy lệnh (mặc định) |
+| `workspace` | Chỉ sửa trong thư mục làm việc |
+| `read-only` | Chỉ đọc, không sửa gì |
 
-DMs do not require an @ mention. Groups and topic groups require `@bot` by default; `@all` is ignored. Cloud-doc comments in supported document types run when the bot is mentioned.
+## Gặp lỗi?
 
-## Reply Display and COT
-
-`/config` controls three presentation settings:
-
-- **Message reply mode**: `message card` streams the final reply; `plain text` sends once after the run finishes.
-- **Tool-call display**: controls whether tool blocks appear in the final card / markdown reply.
-- **COT process message**: `off` sends only the final reply; `brief` first sends a COT message with agent progress text and tool summaries; `detailed` also includes tool args and truncated output.
-
-When COT is enabled, the bridge splits the process view and final answer into two messages. The COT message is for tracing what the agent did; the final answer is still generated from the agent's raw text, without heuristic bridge-side filtering. If an agent emits final-answer text as ordinary stream text, that text can also appear in the COT process message.
-
-## lark-cli identity policy
-
-Each profile uses a profile-local lark-cli directory at `~/.lark-channel/profiles/<profile>/lark-cli`. The agent process receives `LARKSUITE_CLI_CONFIG_DIR` for that directory, so personal authorization in one profile is not shared with another profile.
-
-The default policy is `bot-only`: lark-cli uses the app/bot identity and does not access personal resources. When a user authorizes personal resources such as calendar, mail, or drive, the current profile can switch to `user-default`, which keeps app identity available and also allows the authorized user identity. Owner/admin users can inspect or change this policy in `/config`; `/status` shows the current summary as `lark-cli: app` or `lark-cli: user-ready`.
-
-## Working directories
-
-Each profile may define a default working directory through `workspaces.default`. New profiles may be created with `--workspace <path>`; if omitted, the bridge creates a profile-managed default working directory.
-
-This is a profile-field snippet. Do not replace the whole `config.json` with it; edit the matching profile's `workspaces` field.
-
-```json
-{
-  "workspaces": {
-    "default": "/Users/me/.lark-channel-workspaces/claude/default"
-  }
-}
-```
-
-The bridge checks that a selected directory exists, is a directory, and is not an overly broad location such as `/`, the home root, a system directory, or a temp root. The working directory is only the current directory for an agent run. It is not a filesystem sandbox; actual file access still depends on the local agent process and its permission mode.
-
-## Permission modes
-
-The recommended user-facing profile config is `permissions.defaultAccess` and `permissions.maxAccess`. New profiles default to `full` for both values so the bridge can keep local tools, authorization flows, file writes, and other agent features fully usable. To tighten a profile, set one or both values to `workspace` or `read-only`; stricter modes can limit local tool execution, login/authorization flows, file writes, and similar capabilities.
-
-This is a profile-field snippet. Do not replace the whole `config.json` with it; edit the matching profile's `permissions` field.
-
-```json
-{
-  "permissions": {
-    "defaultAccess": "full",
-    "maxAccess": "full"
-  }
-}
-```
-
-Mode mapping:
-
-| Bridge access | Claude permission mode | Codex mode |
+| Terminal báo | Nghĩa là | Sửa sao |
 |---|---|---|
-| `full` | `bypassPermissions` | `danger-full-access` |
-| `workspace` | `acceptEdits` | `workspace-write` |
-| `read-only` | `plan` | `read-only` |
+| `Không tìm thấy Claude Code trên máy này` | Chưa cài `claude` (hoặc mới chỉ cài Claude.app) | `npm i -g @anthropic-ai/claude-code` |
+| `Chưa có cấu hình…` | Chưa chạy lần đầu | Chạy `lark-channel-bridge run` trong terminal |
+| Bot không trả lời | Máy ngủ / tắt / daemon chết | `lark-channel-bridge status` |
+| Bot chạy nhưng không đụng được Lark | Thiếu lark-cli | Xem [mục 3](#3-cần-chuẩn-bị-gì) |
 
-The legacy `sandbox` field is still readable for old configs. After the bridge saves the profile, it migrates that setting to canonical `permissions`.
+Xem thêm: `lark-channel-bridge --help`, và [tài liệu đầy đủ (tiếng Anh)](./README.en.md).
 
-## Data directories
+## Bản fork này thêm gì
 
-| Path | Content |
+| Phần | Của ai |
 |---|---|
-| `~/.lark-channel/config.json` | Root config with profiles and active profile |
-| `~/.lark-channel/active-profile` | Last selected profile |
-| `~/.lark-channel/profiles/<profile>/sessions.json` | Session state |
-| `~/.lark-channel/profiles/<profile>/sessions.json.catalog.json` | Agent-aware session catalog |
-| `~/.lark-channel/profiles/<profile>/workspaces.json` | Current and named workspace bindings |
-| `~/.lark-channel/profiles/<profile>/secrets.enc` | Profile-local encrypted secrets |
-| `~/.lark-channel/profiles/<profile>/lark-cli/` | Profile-local lark-cli directory |
-| `~/.lark-channel/profiles/<profile>/media/` | Attachment cache |
-| `~/.lark-channel/profiles/<profile>/logs/` | Structured run logs |
-| `~/.lark-channel/registry/processes.json` | Local process registry |
-| `~/.lark-channel/registry/locks/` | Profile and app locks |
+| Toàn bộ engine — kênh Lark, thẻ, adapter Claude/Codex, wizard QR, phiên, phân quyền | **Dự án gốc**: [zarazhangrui/lark-coding-agent-bridge](https://github.com/zarazhangrui/lark-coding-agent-bridge) |
+| Hướng dẫn song ngữ, dịch phần cài đặt sang Việt/Anh | Bản fork này |
 
-Set `LARK_CHANNEL_HOME=/path/to/state` to move all local bridge state. `LARK_CHANNEL_LOG_DAYS` overrides log retention.
+**Bị lỗi ở bản thân bridge → báo về [dự án gốc](https://github.com/zarazhangrui/lark-coding-agent-bridge/issues).** Chỉ mở issue ở repo này nếu lỗi nằm ở phần hướng dẫn hoặc bản dịch.
 
-## Access control
+> **Chưa xong:** giao diện **trong Lark** (thẻ `/config`, `/help`…) **vẫn còn tiếng Trung** — đang làm. Hiện tại chỉ phần cài đặt trong terminal là đã có tiếng Việt.
 
-**Chat access is private by default: out of the box, only *you* can use the bot in DMs and groups.** "You" = whoever created / owns the Feishu app (the person who scanned the QR to set it up). The bot figures out who the app owner is automatically from Feishu, so **solo chat use needs zero configuration** — you can DM it and `@`-mention it in any group, and everyone else's chat messages are silently ignored (no "permission denied" reply, which would only confirm the bot exists). Cloud-doc comments are document-scoped; see below.
+## Giấy phép
 
-To let other people or groups in, add them to one of three lists:
-
-| List | Controls | Add | Remove |
-|------|----------|-----|--------|
-| **Allowed users** | who can DM the bot | `/invite user @them` | `/remove user @them` |
-| **Allowed chats** | which groups the bot answers in (for **everyone** in them) | `/invite group` (current group) / `/invite all group` (every group the bot is in) | `/remove group` (current group) |
-| **Admins** | who can change settings, and use the bot in any group | `/invite admin @them` | `/remove admin @them` |
-
-> `/invite` and `/remove` can only be run by **you (the creator) and admins**. The `@` in the command points at the *target person* (not the bot) — the bot resolves the mention to their identity, so you never deal with raw IDs.
-
-### Two identities that bypass everything
-
-- **You (the creator)**: subject to no list at all — DMs, any group, every command. You **can never lock yourself out**: even if the lists get messed up, DM the bot and send `/config` to get back in. Transfer the app's ownership in the Feishu console and the bot follows the new owner automatically.
-- **Admins**: can DM, run management commands like `/config`, and **bypass the allowed-chats list** — the bot answers them in any group, listed or not. Good for teammates who co-maintain the bot.
-
-### Common setups
-
-- **Just me** → nothing to do; this is the default.
-- **Let a teammate DM the bot** → `/invite user @them`
-- **Open a work group to everyone in it** → send `/invite group` inside that group
-- **First-time setup, onboard every group the bot is already in** → `/invite all group` pulls them all into the list at once; trim with `/remove group` afterwards
-- **Add a co-admin** → `/invite admin @them`
-
-### Worth knowing
-
-- Changes take effect on the **next message** — no restart needed.
-- **In groups you must `@` the bot first** (DMs don't need it). That's a separate toggle (`/config` → "require @ in groups"), independent of the lists above.
-- Strangers get pure silence — no reply at all. The one exception: if someone `@`-mentions the bot in a group that hasn't been opened up, the bot posts a friendly one-liner telling them an admin can run `/invite group` to enable it.
-- Cloud-doc comments are document-scoped: anyone who can comment in a supported document and mention the bot can trigger a reply.
-
-### Advanced: editing the config file directly
-
-If you'd rather not do it inside Feishu, `/invite` and `/config` write the matching profile's `access` field in `~/.lark-channel/config.json`. Empty lists mean nobody from that list, not open access. This is a profile-field snippet; do not replace the whole `config.json` with it:
-
-```json
-{
-  "schemaVersion": 2,
-  "profiles": {
-    "claude": {
-      "agentKind": "claude",
-      "access": {
-        "allowedUsers": ["ou_xxxxxxxxxxxxx"],
-        "allowedChats": ["oc_xxxxxxxxxxxxx"],
-        "admins": ["ou_xxxxxxxxxxxxx"],
-        "requireMentionInGroup": true
-      }
-    }
-  }
-}
-```
-
-`allowedUsers` / `admins` take user `open_id`s; `allowedChats` takes group `chat_id`s. The easiest way to find an ID by hand: have the person message the bot (or `@` it in the group), then check the active profile's log:
-
-```bash
-grep '"event":"enter"' ~/.lark-channel/profiles/<profile>/logs/bridge-$(date +%Y%m%d).jsonl | tail -5
-```
-
-Each line carries `chatId` (group / DM id) and `senderId` (user `open_id`). After a manual edit, **restart the bridge** or send `/reconnect` from an allowed admin context to apply it. For day-to-day tweaks `/invite` / `/config` are easier; direct edits are mainly for deployment scripts that pre-seed access.
-
-## Cloud-doc comments
-
-Cloud-doc comments do not need a separate workspace binding or document allowlist. In supported document comments, mention the bot and the bridge replies in the same thread. Comment runs reuse the document session key and fall back to the user home directory when no document cwd was previously recorded.
-
-## FAQ
-
-**The bot stays silent or the local CLI never replies.** Usually the local `claude` or `codex` CLI is not logged in, or the current session points to a working directory that no longer exists. Send `/status` to inspect; `/new` often fixes it by starting a fresh session.
-
-**The agent subprocess looks frozen (card stuck on the last frame).** The bridge supports an idle watchdog: if the agent emits nothing for N minutes, the process is killed and the card is annotated with the auto-termination reason. Disabled by default. Enable with `/config` globally, or `/timeout 10` for the current session; `/timeout off` disables it for the session; `/timeout default` clears the session override.
-
-**The agent says it cannot see an image I sent.** Upgrade to the latest version. Releases before 0.1.0 had a filename-dedup bug.
-
-## Testing and CI
-
-Local checks:
-
-```bash
-pnpm test
-pnpm typecheck
-pnpm build
-```
-
-`pnpm test` includes unit, integration, and process-level adapter tests. CI runs on macOS, Ubuntu, and Windows with `pnpm install --frozen-lockfile`, `pnpm test`, `pnpm typecheck`, and `pnpm build`.
-
-## Optional telemetry
-
-By default the bridge reports **nothing**: no metrics, no logs leave your machine, and it pulls in zero telemetry dependencies. The hook below is inert unless you opt in.
-
-To wire up your own monitoring, point an environment variable at a module that default-exports (or exports `createAdapter`) an `AdapterFactory`:
-
-```bash
-LARK_CHANNEL_TELEMETRY_MODULE=your-telemetry-package lark-channel-bridge start
-```
-
-That module receives every `log.*` event plus error/metric hooks and forwards them wherever you like. The interface is exported from the package root:
-
-```ts
-import type { AdapterFactory, TelemetryAdapter, TelemetryEvent } from 'lark-channel-bridge';
-
-const createAdapter: AdapterFactory = (meta) => ({
-  emit(event) {/* ship event */},
-  recordError(err, ctx) {/* ship exception */},
-  recordMetric(name, value, tags) {/* ship metric */},
-  flush(timeoutMs) {/* drain buffered events */},
-});
-export default createAdapter;
-```
-
-A missing module, a bad factory, or a throwing adapter all degrade to noop — telemetry can never stop the bridge from starting or break logging.
-
-## Credits
-
-This project would not exist without **[zarazhangrui/lark-coding-agent-bridge](https://github.com/zarazhangrui/lark-coding-agent-bridge)**, published under the MIT License by the Lark Channel Bridge contributors.
-
-Everything that makes this work — the Lark WebSocket channel, the streaming card renderer, the Claude Code and Codex adapters, the QR registration wizard, sessions, and access control — is upstream's work. This fork contributes only the onboarding layer around it:
-
-| Layer | Author |
-|---|---|
-| Bridge engine — channel, adapters, cards, sessions, access control, QR wizard | **Upstream**: [zarazhangrui/lark-coding-agent-bridge](https://github.com/zarazhangrui/lark-coding-agent-bridge) |
-| One-command installer, bilingual EN/VI docs, wizard i18n, plain-language model presets | This fork |
-
-The full upstream commit history is preserved in this repository, so `git log` and `git blame` continue to attribute every line of the engine to the people who wrote it.
-
-Fixes that are not specific to onboarding are sent upstream as pull requests rather than kept here, so the original project benefits too.
-
-**Report bugs in the bridge itself to [upstream's issue tracker](https://github.com/zarazhangrui/lark-coding-agent-bridge/issues)** — not here. Open an issue in this repo only for the installer, the translations, or the docs.
-
-## License
-
-[MIT](./LICENSE) — same as upstream. The original copyright notice is retained in full; this fork's additions are offered under the same terms.
-
----
-
-<sub>The QR code below joins **the upstream project's** feedback group (in Chinese), maintained by the original authors — not by this fork.</sub>
-
-<img src="./assets/feedback-group-qr.png" alt="Upstream project feedback group QR code" width="360">
+[MIT](./LICENSE) — giống bản gốc. Dòng bản quyền gốc được giữ nguyên vẹn.
