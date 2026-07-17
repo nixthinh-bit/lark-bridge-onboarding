@@ -175,6 +175,53 @@ export interface Messages {
       grantedBody: string;
       grantedReconnect: string;
     };
+    /** The streaming card — what the operator watches on every single run. */
+    run: {
+      interrupted: string;
+      idleTimeout: (minutes: number) => string;
+      agentFailed: (message: string) => string;
+      noContent: string;
+      thinking: string;
+      thinkingDone: string;
+      noOutput: string;
+      toolCalls: (count: number, finished: boolean) => string;
+      stopButton: string;
+      footerThinking: string;
+      footerToolRunning: string;
+      footerStreaming: string;
+      summaryInterrupted: string;
+      summaryIdleTimeout: string;
+      summaryError: string;
+      summaryDone: string;
+      summaryToolRunning: string;
+      summaryStreaming: string;
+      summaryThinking: string;
+    };
+    /** `/account` — including the form that takes an App Secret. */
+    account: {
+      currentSummary: string;
+      currentTitle: string;
+      botName: (name: string) => string;
+      unknownBot: string;
+      changeButton: string;
+      validationFailed: (message: string) => string;
+      secretPlaceholder: string;
+      tenantFeishu: string;
+      tenantLark: string;
+      submit: string;
+      cancel: string;
+      changeSummary: string;
+      validatingSummary: string;
+      validatingBody: string;
+      savedSummary: string;
+      savedTitle: string;
+      reconnecting: string;
+      newBotWarning: string;
+      failedSummary: string;
+      failedBody: (reason: string) => string;
+      cancelledSummary: string;
+      cancelledBody: string;
+    };
   };
   models: {
     /**
@@ -415,6 +462,52 @@ export const zh: Messages = {
       grantedBody:
         '`im:message.group_msg` 权限已生效，群里非 @ bot 的消息从现在开始会触发回复。',
       grantedReconnect: '_若仍未生效，发 `/reconnect` 重连一次。_',
+    },
+    run: {
+      interrupted: '_⏹ 已被中断_',
+      idleTimeout: (mins) => `_⏱ ${mins} 分钟无响应,已自动终止_`,
+      agentFailed: (msg) => `⚠️ agent 失败：${msg}`,
+      noContent: '_（未返回内容）_',
+      thinking: '🧠 **思考中**',
+      thinkingDone: '🧠 **思考完成，点击查看**',
+      noOutput: '_无输出_',
+      toolCalls: (count, finished) => `☕ **${count} 个工具调用${finished ? '（已结束）' : ''}**`,
+      stopButton: '⏹ 终止',
+      footerThinking: '🧠 正在思考',
+      footerToolRunning: '🧰 正在调用工具',
+      footerStreaming: '✍️ 正在输出',
+      summaryInterrupted: '已中断',
+      summaryIdleTimeout: '已超时',
+      summaryError: '出错',
+      summaryDone: '已完成',
+      summaryToolRunning: '正在调用工具',
+      summaryStreaming: '正在输出',
+      summaryThinking: '思考中',
+    },
+    account: {
+      currentSummary: '当前应用',
+      currentTitle: '📋 **当前应用**',
+      botName: (name) => `**Bot 名**: ${name}`,
+      unknownBot: '(未知)',
+      changeButton: '更换凭据',
+      validationFailed: (msg) => `❌ **校验失败**：${msg}`,
+      secretPlaceholder: '32 位字符串',
+      tenantFeishu: 'Feishu (国内)',
+      tenantLark: 'Lark (海外)',
+      submit: '提交',
+      cancel: '取消',
+      changeSummary: '更换凭据',
+      validatingSummary: '正在校验...',
+      validatingBody: '⏳ **正在校验凭据...**',
+      savedSummary: '已保存',
+      savedTitle: '✅ **凭据已保存**',
+      reconnecting: '正在用新凭据重连 WebSocket...',
+      newBotWarning: '⚠️ 如果新 bot 不在此群，后续消息将由新 bot 接管，老 bot 不会再回复。',
+      failedSummary: '校验失败',
+      failedBody: (reason) =>
+        `❌ **校验失败**\n\n\`${reason}\`\n\n请检查 App ID 和 Secret 是否正确，重发 \`/account change\` 重试。`,
+      cancelledSummary: '已取消',
+      cancelledBody: '已取消，未做任何修改。',
     },
   },
   models: {
@@ -668,6 +761,54 @@ export const en: Messages = {
       grantedBody:
         '`im:message.group_msg` is now active — group messages that don’t @ the bot will trigger a reply from here on.',
       grantedReconnect: '_If it still doesn’t work, send `/reconnect` once._',
+    },
+    run: {
+      interrupted: '_⏹ Stopped_',
+      idleTimeout: (mins) => `_⏱ No response for ${mins} min — stopped automatically_`,
+      agentFailed: (msg) => `⚠️ The agent failed: ${msg}`,
+      noContent: '_(nothing returned)_',
+      thinking: '🧠 **Thinking**',
+      thinkingDone: '🧠 **Finished thinking — tap to read**',
+      noOutput: '_no output_',
+      toolCalls: (count, finished) =>
+        `☕ **${count} tool call${count === 1 ? '' : 's'}${finished ? ' (done)' : ''}**`,
+      stopButton: '⏹ Stop',
+      footerThinking: '🧠 Thinking',
+      footerToolRunning: '🧰 Running a tool',
+      footerStreaming: '✍️ Writing',
+      summaryInterrupted: 'stopped',
+      summaryIdleTimeout: 'timed out',
+      summaryError: 'failed',
+      summaryDone: 'done',
+      summaryToolRunning: 'running a tool',
+      summaryStreaming: 'writing',
+      summaryThinking: 'thinking',
+    },
+    account: {
+      currentSummary: 'Current app',
+      currentTitle: '📋 **Current app**',
+      botName: (name) => `**Bot name**: ${name}`,
+      unknownBot: '(unknown)',
+      changeButton: 'Change credentials',
+      validationFailed: (msg) => `❌ **Validation failed**: ${msg}`,
+      secretPlaceholder: '32-character string',
+      tenantFeishu: 'Feishu (mainland China)',
+      tenantLark: 'Lark (international)',
+      submit: 'Submit',
+      cancel: 'Cancel',
+      changeSummary: 'Change credentials',
+      validatingSummary: 'Validating…',
+      validatingBody: '⏳ **Validating the credentials…**',
+      savedSummary: 'Saved',
+      savedTitle: '✅ **Credentials saved**',
+      reconnecting: 'Reconnecting with the new credentials…',
+      newBotWarning:
+        '⚠️ If the new bot isn’t in this group, later messages go to it instead and the old bot will stop replying.',
+      failedSummary: 'Validation failed',
+      failedBody: (reason) =>
+        `❌ **Validation failed**\n\n\`${reason}\`\n\nCheck the App ID and Secret, then send \`/account change\` to try again.`,
+      cancelledSummary: 'Cancelled',
+      cancelledBody: 'Cancelled — nothing was changed.',
     },
   },
   models: {
@@ -925,6 +1066,53 @@ export const vi: Messages = {
       grantedBody:
         'Quyền `im:message.group_msg` đã hoạt động — từ giờ tin nhắn trong nhóm không @ bot cũng được trả lời.',
       grantedReconnect: '_Nếu vẫn chưa chạy, gõ `/reconnect` một lần._',
+    },
+    run: {
+      interrupted: '_⏹ Đã dừng_',
+      idleTimeout: (mins) => `_⏱ Không phản hồi ${mins} phút — đã tự dừng_`,
+      agentFailed: (msg) => `⚠️ Bot gặp lỗi: ${msg}`,
+      noContent: '_(không có nội dung trả về)_',
+      thinking: '🧠 **Đang suy nghĩ**',
+      thinkingDone: '🧠 **Đã nghĩ xong — bấm để xem**',
+      noOutput: '_không có kết quả_',
+      toolCalls: (count, finished) => `☕ **${count} thao tác${finished ? ' (xong)' : ''}**`,
+      stopButton: '⏹ Dừng',
+      footerThinking: '🧠 Đang suy nghĩ',
+      footerToolRunning: '🧰 Đang chạy thao tác',
+      footerStreaming: '✍️ Đang viết',
+      summaryInterrupted: 'đã dừng',
+      summaryIdleTimeout: 'quá thời gian',
+      summaryError: 'lỗi',
+      summaryDone: 'xong',
+      summaryToolRunning: 'đang chạy thao tác',
+      summaryStreaming: 'đang viết',
+      summaryThinking: 'đang suy nghĩ',
+    },
+    account: {
+      currentSummary: 'Ứng dụng hiện tại',
+      currentTitle: '📋 **Ứng dụng hiện tại**',
+      botName: (name) => `**Tên bot**: ${name}`,
+      unknownBot: '(chưa rõ)',
+      changeButton: 'Đổi thông tin đăng nhập',
+      validationFailed: (msg) => `❌ **Xác thực thất bại**: ${msg}`,
+      secretPlaceholder: 'chuỗi 32 ký tự',
+      tenantFeishu: 'Feishu (Trung Quốc)',
+      tenantLark: 'Lark (quốc tế)',
+      submit: 'Lưu',
+      cancel: 'Huỷ',
+      changeSummary: 'Đổi thông tin đăng nhập',
+      validatingSummary: 'Đang xác thực…',
+      validatingBody: '⏳ **Đang xác thực thông tin…**',
+      savedSummary: 'Đã lưu',
+      savedTitle: '✅ **Đã lưu thông tin đăng nhập**',
+      reconnecting: 'Đang kết nối lại bằng thông tin mới…',
+      newBotWarning:
+        '⚠️ Nếu bot mới chưa ở trong nhóm này, các tin nhắn sau sẽ do bot mới nhận và bot cũ sẽ không trả lời nữa.',
+      failedSummary: 'Xác thực thất bại',
+      failedBody: (reason) =>
+        `❌ **Xác thực thất bại**\n\n\`${reason}\`\n\nHãy kiểm tra lại App ID và Secret, rồi gõ \`/account change\` để thử lại.`,
+      cancelledSummary: 'Đã huỷ',
+      cancelledBody: 'Đã huỷ — không thay đổi gì.',
     },
   },
   models: {
