@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import type { AgentEvent } from '../agent/types';
 import type { CotMessagesMode, TenantBrand } from '../config/schema';
 import { log } from '../core/logger';
@@ -189,7 +190,7 @@ export class CotPublisher {
     });
     this.enqueue('STEP_STARTED', {
       stepId: `step-understand-${this.runId}`,
-      stepName: '理解用户问题',
+      stepName: t().cards.run.cotUnderstanding,
     });
   }
 
@@ -299,7 +300,7 @@ export async function consumeCotEvents(
         const toolCallId = evt.id;
         const detailed = opts.detail === 'detailed';
         const showSummary = opts.detail === 'brief' || detailed;
-        const title = showSummary ? cotBriefToolTitle(evt.name, evt.input, 'running') : '正在调用工具';
+        const title = showSummary ? cotBriefToolTitle(evt.name, evt.input, 'running') : t().cards.run.cotCallingTool;
         toolBrief.set(toolCallId, { name: evt.name, input: evt.input });
         publisher.enqueue('TOOL_CALL_START', {
           toolCallId,
@@ -327,7 +328,7 @@ export async function consumeCotEvents(
             ? truncateCot(evt.output ?? '', COT_TOOL_OUTPUT_MAX)
             : brief
               ? cotBriefToolTitle(brief.name, brief.input, evt.isError ? 'error' : 'done')
-              : '工具调用已完成',
+              : t().cards.run.cotToolDone,
         });
         toolBrief.delete(evt.id);
         continue;
@@ -338,7 +339,7 @@ export async function consumeCotEvents(
           textStepOpen = true;
           publisher.enqueue('STEP_STARTED', {
             stepId: finalStepId,
-            stepName: '输出过程',
+            stepName: t().cards.run.cotWriting,
           });
         }
         if (!textMessageOpen) {
@@ -359,7 +360,7 @@ export async function consumeCotEvents(
         if (textStepOpen) {
           publisher.enqueue('STEP_FINISHED', {
             stepId: finalStepId,
-            stepName: '输出过程',
+            stepName: t().cards.run.cotWriting,
           });
         }
         if (evt.type === 'error') {

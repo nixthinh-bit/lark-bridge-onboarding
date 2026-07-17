@@ -196,6 +196,27 @@ export interface Messages {
       summaryToolRunning: string;
       summaryStreaming: string;
       summaryThinking: string;
+      /**
+       * Plain-text reply mode — same states, no card to hang them on.
+       *
+       * `textAgentFailed` exists only because upstream's two renderers differ
+       * by one character: the card uses a fullwidth colon after 失败, the text
+       * path an ASCII one. Almost certainly a typo, but this fork reproduces
+       * upstream's Chinese exactly rather than quietly tidying it, so the two
+       * stay separate. Other languages have no such split and repeat the same
+       * wording.
+       */
+      textAgentFailed: (message: string) => string;
+      textThinking: string;
+      textToolRunning: string;
+      textStreaming: string;
+      toolRunning: string;
+      bodyTruncated: string;
+      /** COT progress messages. */
+      cotUnderstanding: string;
+      cotCallingTool: string;
+      cotToolDone: string;
+      cotWriting: string;
     };
     /** `/account` — including the form that takes an App Secret. */
     account: {
@@ -222,6 +243,106 @@ export interface Messages {
       cancelledSummary: string;
       cancelledBody: string;
     };
+  };
+  /**
+   * Replies to slash commands. Command names, paths and ids are never
+   * translated — they are what the user types or copies back.
+   */
+  commands: {
+    adminOnly: string;
+    adminOnlyStopScope: string;
+    adminOnlyTimeoutScope: string;
+    ackHandled: string;
+    resumeApplied: string;
+    newSession: string;
+    newSessionInterrupted: string;
+    chatCreateFailed: (msg: string) => string;
+    chatCreatedWithCwd: (cwd: string) => string;
+    chatCreated: string;
+    chatCreatedNotice: (name: string) => string;
+    cdUsage: string;
+    cdAbsolute: string;
+    cdDone: (cwd: string) => string;
+    wsUsage: string;
+    wsSaveUsage: string;
+    wsSaveNoCwd: string;
+    wsSaved: (name: string, cwd: string) => string;
+    wsUseUsage: string;
+    wsNotFound: (name: string) => string;
+    wsSwitched: (name: string, cwd: string) => string;
+    wsRemoveUsage: string;
+    wsRemoved: (name: string) => string;
+    docNoBinding: string;
+    resumeNeedsCwd: string;
+    resumeDmOnly: string;
+    resumeCodexHint: (nonce: string) => string;
+    resumeIncompatible: string;
+    resumeReselect: string;
+    resumeNoCodexThread: string;
+    codexSessionUnset: string;
+    stopRequested: (scope: string) => string;
+    stopNotFound: (scope: string) => string;
+    timeoutDisabled: string;
+    timeoutUsage: string;
+    timeoutSession: (scope: string, effective: string, global: string) => string;
+    timeoutSessionFollowsGlobal: (scope: string, global: string) => string;
+    timeoutCleared: (global: string) => string;
+    timeoutNothingToClear: (global: string) => string;
+    timeoutOff: string;
+    timeoutOffLabel: string;
+    timeoutBadValue: string;
+    timeoutSet: (minutes: number) => string;
+    minutes: (n: number) => string;
+    psNone: string;
+    psTableHeader: string;
+    psCurrentMarker: string;
+    psTitle: (n: number) => string;
+    psHint: (processId: string) => string;
+    exitUsage: (processId: string) => string;
+    exitNotFound: (target: string) => string;
+    exitSelf: (id: string) => string;
+    exitFailed: (id: string, msg: string) => string;
+    exitPending: (id: string) => string;
+    exitDone: (id: string) => string;
+    agoSeconds: (n: number) => string;
+    agoMinutes: (n: number) => string;
+    agoHours: (n: number) => string;
+    agoDays: (n: number) => string;
+    reconnectAfterRun: string;
+    reconnectNow: string;
+    reconnectFailed: (msg: string) => string;
+    doctorRateLimited: string;
+    doctorNoWorkspace: string;
+    doctorWorkspaceCheck: (visible: string) => string;
+    doctorInFlight: string;
+    doctorAccepted: string;
+    workspaceUnset: string;
+    accountUsage: string;
+    accountEmptyCreds: string;
+    accountSaveFailed: (msg: string) => string;
+    inviteNoGroups: string;
+    inviteGroupsAdded: (added: number, total: number) => string;
+    inviteUsage: string;
+    inviteGroupDmError: string;
+    inviteGroupAlready: string;
+    inviteGroupAdded: (chatId: string) => string;
+    inviteNoMention: (kind: string) => string;
+    labelUsers: string;
+    labelAdmins: string;
+    inviteAdded: (names: string, label: string) => string;
+    inviteAlready: (names: string, label: string) => string;
+    removeUsage: string;
+    removeGroupDmError: string;
+    removeGroupNotThere: string;
+    removeGroupDone: string;
+    removeNoMention: (kind: string) => string;
+    removeDone: (names: string, label: string) => string;
+    removeNotThere: (names: string, label: string) => string;
+    configUsage: string;
+    saveFailedRollbackFailed: string;
+    saveFailedRolledBack: string;
+    identityNotApplied: string;
+    configNotWritten: string;
   };
   models: {
     /**
@@ -483,6 +604,16 @@ export const zh: Messages = {
       summaryToolRunning: '正在调用工具',
       summaryStreaming: '正在输出',
       summaryThinking: '思考中',
+      textAgentFailed: (msg) => `⚠️ agent 失败:${msg}`,
+      textThinking: '_🧠 正在思考…_',
+      textToolRunning: '_🧰 正在调用工具…_',
+      textStreaming: '_✍️ 正在输出…_',
+      toolRunning: '_运行中…_',
+      bodyTruncated: '_（body 已截断,完整内容查 `/doctor` 或日志）_',
+      cotUnderstanding: '理解用户问题',
+      cotCallingTool: '正在调用工具',
+      cotToolDone: '工具调用已完成',
+      cotWriting: '输出过程',
     },
     account: {
       currentSummary: '当前应用',
@@ -509,6 +640,118 @@ export const zh: Messages = {
       cancelledSummary: '已取消',
       cancelledBody: '已取消，未做任何修改。',
     },
+  },
+  commands: {
+    adminOnly: '❌ 此命令仅管理员可用。',
+    adminOnlyStopScope: '❌ 指定 scope 停止任务仅管理员可用。',
+    adminOnlyTimeoutScope: '❌ 指定 scope 设置 timeout 仅管理员可用。',
+    ackHandled: '命令已处理。',
+    resumeApplied: '已完成，请继续发送下一条消息。',
+    newSession: '已开始新会话。',
+    newSessionInterrupted: '已中断当前任务并开始新会话。',
+    chatCreateFailed: (msg) => `❌ 创建群失败：${msg}\n\n确认 bot 已开启 \`im:chat\` 权限。`,
+    chatCreatedWithCwd: (cwd) => `🎉 群已建好，cwd 继承自原群：\`${cwd}\`\n\n@我 + 任意消息开始对话。`,
+    chatCreated: '🎉 群已建好。\n\n@我 + 任意消息开始对话。',
+    chatCreatedNotice: (name) => `✓ 已创建群 **${name}**，去新群里继续。`,
+    cdUsage: '用法：`/cd <绝对路径>` 或 `/cd ~/xxx`',
+    cdAbsolute: '请使用绝对路径，或 `~/xxx` 表示 home 下的子路径。',
+    cdDone: (cwd) => `✓ 已切换 cwd 到 \`${cwd}\`\n（session 已重置）`,
+    wsUsage: '用法：`/ws [list|save <name>|use <name>|remove <name>]`',
+    wsSaveUsage: '用法：`/ws save <name>`',
+    wsSaveNoCwd: '当前 chat 未设置 cwd，先用 `/cd` 设置再保存。',
+    wsSaved: (name, cwd) => `✓ 工作目录别名已保存：\`${name}\` → ${cwd}`,
+    wsUseUsage: '用法：`/ws use <name>`',
+    wsNotFound: (name) => `未找到工作目录别名：\`${name}\``,
+    wsSwitched: (name, cwd) => `✓ 已切换到 \`${name}\` (${cwd})\n（session 已重置）`,
+    wsRemoveUsage: '用法：`/ws remove <name>`',
+    wsRemoved: (name) => `✓ 已删除工作目录别名：\`${name}\``,
+    docNoBinding: '云文档评论现在不需要绑定工作区；在支持的文档评论里 @bot 即可触发回复。',
+    resumeNeedsCwd: '请先使用 /cd <path> 选择工作目录，再查看或恢复会话。',
+    resumeDmOnly: '群聊中不展示历史会话详情。请私聊 bot 使用 `/resume` 查看和选择历史会话。',
+    resumeCodexHint: (nonce) =>
+      `当前 Codex thread 可恢复。\n使用 \`/resume use ${nonce}\` 恢复（10 分钟内有效）。`,
+    resumeIncompatible: '当前上下文不可恢复这个会话，请先用 `/resume` 重新生成恢复候选。',
+    resumeReselect: '当前上下文不可恢复这个会话，请重新选择当前工作区和权限策略下的会话。',
+    resumeNoCodexThread: '当前上下文没有可恢复的 Codex thread，请先在当前工作区完成一次运行。',
+    codexSessionUnset: '(未建立)',
+    stopRequested: (scope) => `已请求停止 \`${scope}\`。`,
+    stopNotFound: (scope) => `未找到正在运行的任务：\`${scope}\`。`,
+    timeoutDisabled: '未启用',
+    timeoutUsage:
+      '\n\n用法:\n- `/timeout 15` 当前 session 设 15 分钟\n- `/timeout off` 当前 session 关闭探活\n- `/timeout default` 清除 session 覆盖,回退全局\n- `/timeout comment:<scopeHash> 15` 管理员设置 comment scope\n\n_注:`/new` 会清掉当前 session 的覆盖,回到全局_',
+    timeoutSession: (scope, effective, global) =>
+      `⏱ 当前 session${scope} 探活:${effective}\n全局默认:${global}`,
+    timeoutSessionFollowsGlobal: (scope, global) => `⏱ 当前 session${scope} 探活:跟随全局(${global})`,
+    timeoutCleared: (global) => `✅ 已清除 session 覆盖,回退到全局(${global})。`,
+    timeoutNothingToClear: (global) => `当前 session 本来就没设过覆盖,跟随全局(${global})。`,
+    timeoutOff: '✅ 已关闭当前 session 的探活。',
+    timeoutOffLabel: '已关闭（当前 session）',
+    timeoutBadValue: '❌ 用法:`/timeout <1-120>` / `/timeout off` / `/timeout default`',
+    timeoutSet: (n) => `✅ 当前 session 探活已设为 ${n} 分钟。`,
+    minutes: (n) => `${n} 分钟`,
+    psNone: '当前没有 bot 在运行(理论上不可能,你正在跟其中之一对话…)',
+    psTableHeader: '| # | ID | Bot | 启动 |',
+    psCurrentMarker: ' ← 当前正在回复',
+    psTitle: (n) => `🧭 **当前有 ${n} 个 bot 在运行**`,
+    psHint: (pid) => '用 `/exit <id|#>` 关掉某一个;`/exit ' + pid + '` 关掉正在回复你的这个 bot。',
+    exitUsage: (pid) =>
+      '用法:`/exit <id|#>` —— `id` 是 `/ps` 显示的短 id,`#` 是序号。\n' +
+      `当前正在回复你的是 \`${pid}\`。`,
+    exitNotFound: (target) => `❌ 没找到匹配的 bot:\`${target}\`。发 \`/ps\` 看可选目标。`,
+    exitSelf: (id) => `👋 即将关闭当前 bot \`${id}\`,再见。`,
+    exitFailed: (id, msg) => `❌ 关掉 bot \`${id}\` 失败:${msg}`,
+    exitPending: (id) => `📨 已请求关闭 \`${id}\`,但还在收尾。再发 \`/ps\` 复查一下。`,
+    exitDone: (id) => `✓ 已关闭 bot \`${id}\`。`,
+    agoSeconds: (n) => `${n}s 前`,
+    agoMinutes: (n) => `${n}m 前`,
+    agoHours: (n) => `${n}h 前`,
+    agoDays: (n) => `${n}d 前`,
+    reconnectAfterRun: '⏳ 将在当前运行结束后重连…',
+    reconnectNow: '⏳ 正在停止当前运行并重连…',
+    reconnectFailed: (msg) => `❌ 重连失败:${msg}`,
+    doctorRateLimited: 'doctor rate limited: 同一用户 30 秒内只能触发一次。',
+    doctorNoWorkspace:
+      '未设置工作目录。先用 `/cd <path>` 或 `/ws use <name>` 选择工作目录后再运行 agent echo check。',
+    doctorWorkspaceCheck: (visible) => `${visible} 工作目录不可用时只执行 self-check，不启动 agent。`,
+    doctorInFlight: 'doctor in-flight: 当前 profile 已有诊断运行中。',
+    doctorAccepted: '🔍 已收到诊断请求，分析结果将私信发给你。',
+    workspaceUnset: '(未设置)',
+    accountUsage: '用法：`/account` 或 `/account change`',
+    accountEmptyCreds: 'App ID 或 App Secret 为空',
+    accountSaveFailed: (msg) => `保存凭据失败：${msg}`,
+    inviteNoGroups: '当前 bot 还不在任何群里，没有可加入的群。',
+    inviteGroupsAdded: (added, total) => `✅ 已把 bot 所在的 ${added} 个群加入响应群名单（共 ${total} 个）。`,
+    inviteUsage:
+      '用法：\n' +
+      '• `/invite user @某人` — 加入允许私聊\n' +
+      '• `/invite admin @某人` — 加入管理员\n' +
+      '• `/invite group` — 把当前群加入响应群名单\n' +
+      '• `/invite all group` — 把 bot 所在的所有群一键加入',
+    inviteGroupDmError: '❌ `/invite group` 只能在群里发，在私聊里没有 chat_id 可以加。',
+    inviteGroupAlready: '✅ 当前群已在白名单里，无需重复添加。',
+    inviteGroupAdded: (chatId) => `✅ 已把当前群（\`${chatId}\`）加入响应群名单。`,
+    inviteNoMention: (kind) =>
+      `❌ 没检测到 @ 的用户。请像这样发：\`/invite ${kind} @某人\`（注意 @ 用户不是 @ bot）。`,
+    labelUsers: '用户白名单',
+    labelAdmins: '管理员',
+    inviteAdded: (names, label) => `✅ 已把 ${names} 加入${label}。`,
+    inviteAlready: (names, label) => `_${names} 已经在${label}里，跳过。_`,
+    removeUsage:
+      '用法：\n' +
+      '• `/remove user @某人` — 移出用户白名单\n' +
+      '• `/remove admin @某人` — 移出管理员\n' +
+      '• `/remove group` — 把当前群移出响应群名单',
+    removeGroupDmError: '`/remove group` 请在要移除的群里发，私聊里没有可移除的群。',
+    removeGroupNotThere: '✅ 当前群本来就不在响应名单里，无需移除。',
+    removeGroupDone: '✅ 已把当前群移出响应群名单。',
+    removeNoMention: (kind) => `请 @ 上要移除的人，例如：\`/remove ${kind} @某人\`。`,
+    removeDone: (names, label) => `✅ 已把 ${names} 移出${label}。`,
+    removeNotThere: (names, label) => `${names} 本来就不在${label}里，无需移除。`,
+    configUsage: '用法:`/config`',
+    saveFailedRollbackFailed: '保存失败，且 lark-cli 身份策略回滚失败。请执行 /status 检查当前状态。',
+    saveFailedRolledBack: '保存失败，lark-cli 身份策略已回滚。请重新打开 /config 确认当前状态。',
+    identityNotApplied: 'lark-cli 身份策略未生效，未做任何修改。',
+    configNotWritten: '配置未写入，未做任何修改。',
   },
   models: {
     // Verbatim from upstream — do not reword; tests assert these exactly.
@@ -783,6 +1026,16 @@ export const en: Messages = {
       summaryToolRunning: 'running a tool',
       summaryStreaming: 'writing',
       summaryThinking: 'thinking',
+      textAgentFailed: (msg) => `⚠️ The agent failed: ${msg}`,
+      textThinking: '_🧠 Thinking…_',
+      textToolRunning: '_🧰 Running a tool…_',
+      textStreaming: '_✍️ Writing…_',
+      toolRunning: '_running…_',
+      bodyTruncated: '_(output truncated — see `/doctor` or the logs for the rest)_',
+      cotUnderstanding: 'Understanding the request',
+      cotCallingTool: 'Running a tool',
+      cotToolDone: 'Tool finished',
+      cotWriting: 'Writing',
     },
     account: {
       currentSummary: 'Current app',
@@ -810,6 +1063,133 @@ export const en: Messages = {
       cancelledSummary: 'Cancelled',
       cancelledBody: 'Cancelled — nothing was changed.',
     },
+  },
+  commands: {
+    adminOnly: '❌ Admins only.',
+    adminOnlyStopScope: '❌ Stopping a task by scope is admins only.',
+    adminOnlyTimeoutScope: '❌ Setting a timeout by scope is admins only.',
+    ackHandled: 'Done.',
+    resumeApplied: 'Ready — send your next message.',
+    newSession: 'Started a new session.',
+    newSessionInterrupted: 'Stopped the running task and started a new session.',
+    chatCreateFailed: (msg) =>
+      `❌ Couldn’t create the group: ${msg}\n\nCheck that the bot has the \`im:chat\` permission.`,
+    chatCreatedWithCwd: (cwd) =>
+      `🎉 Group created, working directory carried over: \`${cwd}\`\n\n@ me with anything to start.`,
+    chatCreated: '🎉 Group created.\n\n@ me with anything to start.',
+    chatCreatedNotice: (name) => `✓ Created **${name}** — continue over there.`,
+    cdUsage: 'Usage: `/cd <absolute path>` or `/cd ~/something`',
+    cdAbsolute: 'Use an absolute path, or `~/something` for a path under your home directory.',
+    cdDone: (cwd) => `✓ Working directory is now \`${cwd}\`\n(the session was reset)`,
+    wsUsage: 'Usage: `/ws [list|save <name>|use <name>|remove <name>]`',
+    wsSaveUsage: 'Usage: `/ws save <name>`',
+    wsSaveNoCwd: 'This chat has no working directory yet — set one with `/cd` first.',
+    wsSaved: (name, cwd) => `✓ Workspace saved: \`${name}\` → ${cwd}`,
+    wsUseUsage: 'Usage: `/ws use <name>`',
+    wsNotFound: (name) => `No workspace named \`${name}\``,
+    wsSwitched: (name, cwd) => `✓ Switched to \`${name}\` (${cwd})\n(the session was reset)`,
+    wsRemoveUsage: 'Usage: `/ws remove <name>`',
+    wsRemoved: (name) => `✓ Deleted workspace \`${name}\``,
+    docNoBinding:
+      'Cloud-doc comments no longer need a workspace binding — just @ the bot in a supported document’s comments.',
+    resumeNeedsCwd: 'Pick a working directory with /cd <path> first, then view or resume sessions.',
+    resumeDmOnly:
+      'Past sessions aren’t listed in groups. DM the bot and use `/resume` to browse and pick one.',
+    resumeCodexHint: (nonce) =>
+      `The current Codex thread can be resumed.\nUse \`/resume use ${nonce}\` (valid for 10 minutes).`,
+    resumeIncompatible:
+      'This session can’t be resumed in the current context — run `/resume` again to get fresh candidates.',
+    resumeReselect:
+      'This session can’t be resumed in the current context — pick one from the current workspace and permission mode.',
+    resumeNoCodexThread:
+      'No resumable Codex thread in this context — complete a run in this workspace first.',
+    codexSessionUnset: '(not started)',
+    stopRequested: (scope) => `Stop requested for \`${scope}\`.`,
+    stopNotFound: (scope) => `No running task found: \`${scope}\`.`,
+    timeoutDisabled: 'off',
+    timeoutUsage:
+      '\n\nUsage:\n- `/timeout 15` — 15 minutes for this session\n- `/timeout off` — no watchdog for this session\n- `/timeout default` — drop the override and follow the global default\n- `/timeout comment:<scopeHash> 15` — admins: set a comment scope\n\n_Note: `/new` clears this session’s override and returns to the global default._',
+    timeoutSession: (scope, effective, global) =>
+      `⏱ Watchdog for this session${scope}: ${effective}\nGlobal default: ${global}`,
+    timeoutSessionFollowsGlobal: (scope, global) =>
+      `⏱ Watchdog for this session${scope}: follows the global default (${global})`,
+    timeoutCleared: (global) => `✅ Override cleared — back to the global default (${global}).`,
+    timeoutNothingToClear: (global) =>
+      `This session had no override anyway — it follows the global default (${global}).`,
+    timeoutOff: '✅ Watchdog disabled for this session.',
+    timeoutOffLabel: 'off (this session)',
+    timeoutBadValue: '❌ Usage: `/timeout <1-120>` / `/timeout off` / `/timeout default`',
+    timeoutSet: (n) => `✅ Watchdog for this session set to ${n} minutes.`,
+    minutes: (n) => `${n} min`,
+    psNone: 'No bots running (which shouldn’t be possible — you’re talking to one…)',
+    psTableHeader: '| # | ID | Bot | Started |',
+    psCurrentMarker: ' ← replying to you now',
+    psTitle: (n) => `🧭 **${n} bot${n === 1 ? '' : 's'} running**`,
+    psHint: (pid) =>
+      'Use `/exit <id|#>` to stop one; `/exit ' + pid + '` stops the bot replying to you.',
+    exitUsage: (pid) =>
+      'Usage: `/exit <id|#>` — `id` is the short id from `/ps`, `#` is the row number.\n' +
+      `The one replying to you is \`${pid}\`.`,
+    exitNotFound: (target) => `❌ No bot matches \`${target}\`. Send \`/ps\` to see the options.`,
+    exitSelf: (id) => `👋 Stopping this bot \`${id}\` — bye.`,
+    exitFailed: (id, msg) => `❌ Couldn’t stop bot \`${id}\`: ${msg}`,
+    exitPending: (id) => `📨 Stop requested for \`${id}\`, but it’s still winding down. Send \`/ps\` to check.`,
+    exitDone: (id) => `✓ Stopped bot \`${id}\`.`,
+    agoSeconds: (n) => `${n}s ago`,
+    agoMinutes: (n) => `${n}m ago`,
+    agoHours: (n) => `${n}h ago`,
+    agoDays: (n) => `${n}d ago`,
+    reconnectAfterRun: '⏳ Will reconnect once the current run finishes…',
+    reconnectNow: '⏳ Stopping the current run and reconnecting…',
+    reconnectFailed: (msg) => `❌ Reconnect failed: ${msg}`,
+    doctorRateLimited: 'doctor rate limited: once every 30 seconds per user.',
+    doctorNoWorkspace:
+      'No working directory set. Pick one with `/cd <path>` or `/ws use <name>` before running the agent echo check.',
+    doctorWorkspaceCheck: (visible) =>
+      `${visible} When the working directory is unavailable, only the self-check runs — the agent is not started.`,
+    doctorInFlight: 'doctor in-flight: this profile already has a diagnostic running.',
+    doctorAccepted: '🔍 Diagnostic started — the results will arrive in a DM.',
+    workspaceUnset: '(not set)',
+    accountUsage: 'Usage: `/account` or `/account change`',
+    accountEmptyCreds: 'App ID or App Secret is empty',
+    accountSaveFailed: (msg) => `Couldn’t save the credentials: ${msg}`,
+    inviteNoGroups: 'The bot isn’t in any group yet, so there’s nothing to add.',
+    inviteGroupsAdded: (added, total) =>
+      `✅ Added the ${added} group(s) the bot is in to the allowed list (${total} total).`,
+    inviteUsage:
+      'Usage:\n' +
+      '• `/invite user @name` — allow them to DM the bot\n' +
+      '• `/invite admin @name` — make them an admin\n' +
+      '• `/invite group` — allow the current group\n' +
+      '• `/invite all group` — allow every group the bot is in',
+    inviteGroupDmError: '❌ `/invite group` only works inside a group — a DM has no chat_id to add.',
+    inviteGroupAlready: '✅ This group is already allowed.',
+    inviteGroupAdded: (chatId) => `✅ Added this group (\`${chatId}\`) to the allowed list.`,
+    inviteNoMention: (kind) =>
+      `❌ No @ mention found. Send it like this: \`/invite ${kind} @name\` (@ the person, not the bot).`,
+    labelUsers: 'the allowed users',
+    labelAdmins: 'the admins',
+    inviteAdded: (names, label) => `✅ Added ${names} to ${label}.`,
+    inviteAlready: (names, label) => `_${names} already in ${label} — skipped._`,
+    removeUsage:
+      'Usage:\n' +
+      '• `/remove user @name` — remove from the allowed users\n' +
+      '• `/remove admin @name` — remove from the admins\n' +
+      '• `/remove group` — remove the current group from the allowed list',
+    removeGroupDmError:
+      'Send `/remove group` inside the group you want to remove — a DM has no group to remove.',
+    removeGroupNotThere: '✅ This group wasn’t on the allowed list anyway.',
+    removeGroupDone: '✅ Removed this group from the allowed list.',
+    removeNoMention: (kind) => `@ the person you want to remove, e.g. \`/remove ${kind} @name\`.`,
+    removeDone: (names, label) => `✅ Removed ${names} from ${label}.`,
+    removeNotThere: (names, label) => `${names} wasn’t in ${label} anyway.`,
+    configUsage: 'Usage: `/config`',
+    saveFailedRollbackFailed:
+      'Save failed, and rolling back the lark-cli identity policy also failed. Run /status to check the current state.',
+    saveFailedRolledBack:
+      'Save failed; the lark-cli identity policy was rolled back. Reopen /config to confirm the current state.',
+    identityNotApplied: 'The lark-cli identity policy did not apply — nothing was changed.',
+    configNotWritten: 'Config was not written — nothing was changed.',
   },
   models: {
     labels: {
@@ -1087,6 +1467,16 @@ export const vi: Messages = {
       summaryToolRunning: 'đang chạy thao tác',
       summaryStreaming: 'đang viết',
       summaryThinking: 'đang suy nghĩ',
+      textAgentFailed: (msg) => `⚠️ Bot gặp lỗi: ${msg}`,
+      textThinking: '_🧠 Đang suy nghĩ…_',
+      textToolRunning: '_🧰 Đang chạy thao tác…_',
+      textStreaming: '_✍️ Đang viết…_',
+      toolRunning: '_đang chạy…_',
+      bodyTruncated: '_(kết quả bị cắt bớt — xem đầy đủ bằng `/doctor` hoặc trong log)_',
+      cotUnderstanding: 'Đang hiểu yêu cầu',
+      cotCallingTool: 'Đang chạy thao tác',
+      cotToolDone: 'Thao tác xong',
+      cotWriting: 'Đang viết',
     },
     account: {
       currentSummary: 'Ứng dụng hiện tại',
@@ -1114,6 +1504,133 @@ export const vi: Messages = {
       cancelledSummary: 'Đã huỷ',
       cancelledBody: 'Đã huỷ — không thay đổi gì.',
     },
+  },
+  commands: {
+    adminOnly: '❌ Lệnh này chỉ quản trị viên dùng được.',
+    adminOnlyStopScope: '❌ Dừng tác vụ theo scope chỉ quản trị viên dùng được.',
+    adminOnlyTimeoutScope: '❌ Đặt thời gian chờ theo scope chỉ quản trị viên dùng được.',
+    ackHandled: 'Đã xử lý.',
+    resumeApplied: 'Xong — bạn gửi tin nhắn tiếp theo được rồi.',
+    newSession: 'Đã bắt đầu phiên mới.',
+    newSessionInterrupted: 'Đã dừng việc đang chạy và bắt đầu phiên mới.',
+    chatCreateFailed: (msg) =>
+      `❌ Không tạo được nhóm: ${msg}\n\nKiểm tra xem bot đã có quyền \`im:chat\` chưa.`,
+    chatCreatedWithCwd: (cwd) =>
+      `🎉 Đã tạo nhóm, giữ nguyên thư mục làm việc: \`${cwd}\`\n\n@ tôi kèm nội dung bất kỳ để bắt đầu.`,
+    chatCreated: '🎉 Đã tạo nhóm.\n\n@ tôi kèm nội dung bất kỳ để bắt đầu.',
+    chatCreatedNotice: (name) => `✓ Đã tạo nhóm **${name}** — mời bạn sang đó tiếp tục.`,
+    cdUsage: 'Cách dùng: `/cd <đường-dẫn-tuyệt-đối>` hoặc `/cd ~/thư-mục`',
+    cdAbsolute: 'Hãy dùng đường dẫn tuyệt đối, hoặc `~/thư-mục` cho thư mục trong home của bạn.',
+    cdDone: (cwd) => `✓ Đã chuyển thư mục làm việc sang \`${cwd}\`\n(phiên đã được đặt lại)`,
+    wsUsage: 'Cách dùng: `/ws [list|save <tên>|use <tên>|remove <tên>]`',
+    wsSaveUsage: 'Cách dùng: `/ws save <tên>`',
+    wsSaveNoCwd: 'Cuộc trò chuyện này chưa đặt thư mục làm việc — dùng `/cd` để đặt trước đã.',
+    wsSaved: (name, cwd) => `✓ Đã lưu thư mục: \`${name}\` → ${cwd}`,
+    wsUseUsage: 'Cách dùng: `/ws use <tên>`',
+    wsNotFound: (name) => `Không tìm thấy thư mục tên \`${name}\``,
+    wsSwitched: (name, cwd) => `✓ Đã chuyển sang \`${name}\` (${cwd})\n(phiên đã được đặt lại)`,
+    wsRemoveUsage: 'Cách dùng: `/ws remove <tên>`',
+    wsRemoved: (name) => `✓ Đã xoá thư mục đã lưu: \`${name}\``,
+    docNoBinding:
+      'Bình luận tài liệu giờ không cần gắn thư mục nữa — cứ @ bot trong phần bình luận là bot trả lời.',
+    resumeNeedsCwd: 'Hãy chọn thư mục làm việc bằng /cd <đường-dẫn> trước, rồi mới xem hay mở lại phiên.',
+    resumeDmOnly:
+      'Không hiện danh sách phiên cũ trong nhóm. Hãy nhắn riêng cho bot rồi gõ `/resume` để xem và chọn.',
+    resumeCodexHint: (nonce) =>
+      `Có thể mở lại thread Codex hiện tại.\nGõ \`/resume use ${nonce}\` để mở (có hiệu lực 10 phút).`,
+    resumeIncompatible:
+      'Không mở lại được phiên này trong ngữ cảnh hiện tại — gõ `/resume` để lấy danh sách mới.',
+    resumeReselect:
+      'Không mở lại được phiên này trong ngữ cảnh hiện tại — hãy chọn phiên thuộc thư mục và mức quyền đang dùng.',
+    resumeNoCodexThread:
+      'Ngữ cảnh này chưa có thread Codex nào để mở lại — hãy chạy thử một lần trong thư mục này trước.',
+    codexSessionUnset: '(chưa tạo)',
+    stopRequested: (scope) => `Đã yêu cầu dừng \`${scope}\`.`,
+    stopNotFound: (scope) => `Không thấy tác vụ nào đang chạy: \`${scope}\`.`,
+    timeoutDisabled: 'tắt',
+    timeoutUsage:
+      '\n\nCách dùng:\n- `/timeout 15` — đặt 15 phút cho phiên này\n- `/timeout off` — tắt tự dừng cho phiên này\n- `/timeout default` — bỏ tuỳ chỉnh, quay về mặc định chung\n- `/timeout comment:<scopeHash> 15` — quản trị viên: đặt cho tác vụ bình luận\n\n_Lưu ý: `/new` sẽ xoá tuỳ chỉnh của phiên này và quay về mặc định chung._',
+    timeoutSession: (scope, effective, global) =>
+      `⏱ Tự dừng cho phiên này${scope}: ${effective}\nMặc định chung: ${global}`,
+    timeoutSessionFollowsGlobal: (scope, global) =>
+      `⏱ Tự dừng cho phiên này${scope}: theo mặc định chung (${global})`,
+    timeoutCleared: (global) => `✅ Đã bỏ tuỳ chỉnh — quay về mặc định chung (${global}).`,
+    timeoutNothingToClear: (global) =>
+      `Phiên này vốn chưa tuỳ chỉnh gì — vẫn theo mặc định chung (${global}).`,
+    timeoutOff: '✅ Đã tắt tự dừng cho phiên này.',
+    timeoutOffLabel: 'tắt (phiên này)',
+    timeoutBadValue: '❌ Cách dùng: `/timeout <1-120>` / `/timeout off` / `/timeout default`',
+    timeoutSet: (n) => `✅ Đã đặt tự dừng cho phiên này là ${n} phút.`,
+    minutes: (n) => `${n} phút`,
+    psNone: 'Không có bot nào đang chạy (về lý thì không thể — bạn đang nói chuyện với một cái mà…)',
+    psTableHeader: '| # | ID | Bot | Khởi động |',
+    psCurrentMarker: ' ← đang trả lời bạn',
+    psTitle: (n) => `🧭 **Đang có ${n} bot chạy**`,
+    psHint: (pid) =>
+      'Gõ `/exit <id|#>` để tắt một cái; `/exit ' + pid + '` tắt đúng con đang trả lời bạn.',
+    exitUsage: (pid) =>
+      'Cách dùng: `/exit <id|#>` — `id` là mã ngắn trong `/ps`, `#` là số thứ tự.\n' +
+      `Con đang trả lời bạn là \`${pid}\`.`,
+    exitNotFound: (target) => `❌ Không thấy bot nào khớp \`${target}\`. Gõ \`/ps\` để xem danh sách.`,
+    exitSelf: (id) => `👋 Sắp tắt bot \`${id}\` — tạm biệt.`,
+    exitFailed: (id, msg) => `❌ Không tắt được bot \`${id}\`: ${msg}`,
+    exitPending: (id) => `📨 Đã yêu cầu tắt \`${id}\`, nhưng nó còn đang dọn dẹp. Gõ \`/ps\` để kiểm tra lại.`,
+    exitDone: (id) => `✓ Đã tắt bot \`${id}\`.`,
+    agoSeconds: (n) => `${n}s trước`,
+    agoMinutes: (n) => `${n}m trước`,
+    agoHours: (n) => `${n}h trước`,
+    agoDays: (n) => `${n}d trước`,
+    reconnectAfterRun: '⏳ Sẽ kết nối lại sau khi việc đang chạy xong…',
+    reconnectNow: '⏳ Đang dừng việc hiện tại và kết nối lại…',
+    reconnectFailed: (msg) => `❌ Kết nối lại thất bại: ${msg}`,
+    doctorRateLimited: 'doctor bị giới hạn: mỗi người 30 giây một lần.',
+    doctorNoWorkspace:
+      'Chưa đặt thư mục làm việc. Hãy chọn bằng `/cd <đường-dẫn>` hoặc `/ws use <tên>` rồi mới chạy kiểm tra.',
+    doctorWorkspaceCheck: (visible) =>
+      `${visible} Khi thư mục làm việc không dùng được thì chỉ tự kiểm tra, không khởi động bot.`,
+    doctorInFlight: 'doctor đang chạy: hồ sơ này đã có một lượt chẩn đoán rồi.',
+    doctorAccepted: '🔍 Đã nhận yêu cầu chẩn đoán — kết quả sẽ được nhắn riêng cho bạn.',
+    workspaceUnset: '(chưa đặt)',
+    accountUsage: 'Cách dùng: `/account` hoặc `/account change`',
+    accountEmptyCreds: 'App ID hoặc App Secret đang để trống',
+    accountSaveFailed: (msg) => `Lưu thông tin đăng nhập thất bại: ${msg}`,
+    inviteNoGroups: 'Bot chưa ở trong nhóm nào nên không có gì để thêm.',
+    inviteGroupsAdded: (added, total) =>
+      `✅ Đã thêm ${added} nhóm mà bot đang ở vào danh sách được trả lời (tổng ${total}).`,
+    inviteUsage:
+      'Cách dùng:\n' +
+      '• `/invite user @tên` — cho phép người đó nhắn riêng cho bot\n' +
+      '• `/invite admin @tên` — cho người đó làm quản trị viên\n' +
+      '• `/invite group` — cho phép nhóm hiện tại\n' +
+      '• `/invite all group` — cho phép tất cả nhóm bot đang ở',
+    inviteGroupDmError: '❌ `/invite group` chỉ gõ được trong nhóm — nhắn riêng thì không có nhóm nào để thêm.',
+    inviteGroupAlready: '✅ Nhóm này đã được phép rồi.',
+    inviteGroupAdded: (chatId) => `✅ Đã thêm nhóm này (\`${chatId}\`) vào danh sách được trả lời.`,
+    inviteNoMention: (kind) =>
+      `❌ Không thấy bạn @ ai cả. Hãy gõ như này: \`/invite ${kind} @tên\` (@ người đó, không phải @ bot).`,
+    labelUsers: 'danh sách được nhắn riêng',
+    labelAdmins: 'danh sách quản trị viên',
+    inviteAdded: (names, label) => `✅ Đã thêm ${names} vào ${label}.`,
+    inviteAlready: (names, label) => `_${names} đã có trong ${label} rồi — bỏ qua._`,
+    removeUsage:
+      'Cách dùng:\n' +
+      '• `/remove user @tên` — bỏ khỏi danh sách được nhắn riêng\n' +
+      '• `/remove admin @tên` — bỏ khỏi danh sách quản trị viên\n' +
+      '• `/remove group` — bỏ nhóm hiện tại khỏi danh sách được trả lời',
+    removeGroupDmError:
+      'Hãy gõ `/remove group` ngay trong nhóm muốn bỏ — nhắn riêng thì không có nhóm nào để bỏ.',
+    removeGroupNotThere: '✅ Nhóm này vốn không có trong danh sách, khỏi cần bỏ.',
+    removeGroupDone: '✅ Đã bỏ nhóm này khỏi danh sách được trả lời.',
+    removeNoMention: (kind) => `Hãy @ người muốn bỏ, ví dụ: \`/remove ${kind} @tên\`.`,
+    removeDone: (names, label) => `✅ Đã bỏ ${names} khỏi ${label}.`,
+    removeNotThere: (names, label) => `${names} vốn không có trong ${label}.`,
+    configUsage: 'Cách dùng: `/config`',
+    saveFailedRollbackFailed:
+      'Lưu thất bại, và việc khôi phục danh tính lark-cli cũng thất bại. Gõ /status để kiểm tra tình trạng.',
+    saveFailedRolledBack:
+      'Lưu thất bại; danh tính lark-cli đã được khôi phục. Mở lại /config để kiểm tra tình trạng.',
+    identityNotApplied: 'Danh tính lark-cli chưa được áp dụng — không thay đổi gì.',
+    configNotWritten: 'Chưa ghi được cấu hình — không thay đổi gì.',
   },
   models: {
     labels: {

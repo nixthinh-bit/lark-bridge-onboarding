@@ -281,6 +281,60 @@ describe('the /config card', () => {
   });
 });
 
+describe('the run card and command replies', () => {
+  afterEach(() => {
+    setLang('zh');
+  });
+
+  it('follows the active language', () => {
+    setLang('vi');
+    expect(t().cards.run.footerThinking).toContain('Đang suy nghĩ');
+    expect(t().commands.newSession).toContain('phiên mới');
+
+    setLang('en');
+    expect(t().cards.run.footerThinking).toContain('Thinking');
+    expect(t().commands.newSession).toContain('new session');
+  });
+
+  it('reproduces upstream wording verbatim on the default pack', () => {
+    expect(t().cards.run.stopButton).toBe('⏹ 终止');
+    expect(t().commands.newSession).toBe('已开始新会话。');
+  });
+
+  it('keeps upstream’s two spellings of the agent-failure line apart', () => {
+    // The card uses a fullwidth colon, the plain-text path an ASCII one.
+    // Almost certainly an upstream typo — but this fork reproduces their
+    // Chinese, it doesn't tidy it, and a snapshot pins the text path.
+    setLang('zh');
+    expect(t().cards.run.agentFailed('x')).toBe('⚠️ agent 失败：x');
+    expect(t().cards.run.textAgentFailed('x')).toBe('⚠️ agent 失败:x');
+  });
+
+  it('leaves commands, paths and ids untranslated in replies', () => {
+    // These are what the user types or copies back — translating them would
+    // hand out instructions that don't work.
+    for (const lang of ['zh', 'en', 'vi'] as const) {
+      setLang(lang);
+      expect(t().commands.cdDone('/tmp/x')).toContain('/tmp/x');
+      expect(t().commands.wsNotFound('proj')).toContain('proj');
+      expect(t().commands.exitDone('a1b2')).toContain('a1b2');
+      expect(t().commands.timeoutBadValue).toContain('/timeout');
+    }
+  });
+
+  it('has no Chinese left in the Vietnamese pack', () => {
+    setLang('vi');
+    const rendered = [
+      JSON.stringify(t().cards.run),
+      JSON.stringify(t().commands),
+      t().cards.run.toolCalls(3, true),
+      t().commands.inviteAdded('A', t().commands.labelAdmins),
+      t().commands.timeoutSet(15),
+    ].join(' ');
+    expect(rendered).not.toMatch(/[一-鿿]/);
+  });
+});
+
 describe('message packs', () => {
   afterEach(() => {
     setLang('zh');
