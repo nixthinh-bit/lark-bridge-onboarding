@@ -21,6 +21,18 @@ export interface Messages {
     creator: (openId: string) => string;
     creatorUnresolved: string;
   };
+  models: {
+    /**
+     * Picker label per model value. Model names are proper nouns and stay in
+     * Latin script everywhere; only the parenthetical hint is translated.
+     *
+     * The hints exist because the picker is where a no-code operator decides
+     * how fast they burn their quota, and the model id alone doesn't say that.
+     * Upstream's Chinese labels are reproduced verbatim — this fork adds
+     * languages, it does not reword the original.
+     */
+    labels: Record<string, string>;
+  };
   bootstrap: {
     configSaved: (path: string) => string;
     noConfigNonInteractive: string;
@@ -76,6 +88,21 @@ export const zh: Messages = {
     creator: (openId) => `  Creator: ${openId} (Lark 应用 owner，自动豁免访问控制)`,
     creatorUnresolved:
       '  ⚠️ 未拿到扫码用户的 open_id；启动后会通过应用 owner API 解析创建者。',
+  },
+  models: {
+    // Verbatim from upstream — do not reword; tests assert these exactly.
+    labels: {
+      default: '跟随默认（不指定）',
+      'claude-opus-4-8': 'Opus 4.8（最新）',
+      'claude-opus-4-7': 'Opus 4.7',
+      'claude-sonnet-5': 'Sonnet 5（最新）',
+      'claude-sonnet-4-6': 'Sonnet 4.6',
+      'claude-haiku-4-5': 'Haiku 4.5（最新）',
+      opusplan: 'Opus Plan（规划用 Opus，执行用 Sonnet）',
+      'gpt-5-codex': 'GPT-5 Codex',
+      'gpt-5': 'GPT-5',
+      o3: 'o3',
+    },
   },
   bootstrap: {
     configSaved: (path) => `配置已保存到 ${path}`,
@@ -137,6 +164,20 @@ export const en: Messages = {
     creator: (openId) => `  Creator: ${openId} (Lark app owner — always allowed to use the bot)`,
     creatorUnresolved:
       "  ⚠️ Could not read the scanning user's open_id; the bridge will resolve the app owner on first start.",
+  },
+  models: {
+    labels: {
+      default: 'Follow the default (unspecified)',
+      'claude-opus-4-8': 'Opus 4.8 (newest · deepest — burns your quota fastest)',
+      'claude-opus-4-7': 'Opus 4.7 (deep — burns your quota fast)',
+      'claude-sonnet-5': 'Sonnet 5 (newest · balanced)',
+      'claude-sonnet-4-6': 'Sonnet 4.6 (balanced)',
+      'claude-haiku-4-5': 'Haiku 4.5 (newest · fastest, easiest on your quota)',
+      opusplan: 'Opus Plan (Opus to plan, Sonnet to execute)',
+      'gpt-5-codex': 'GPT-5 Codex',
+      'gpt-5': 'GPT-5',
+      o3: 'o3',
+    },
   },
   bootstrap: {
     configSaved: (path) => `Config saved to ${path}`,
@@ -204,6 +245,20 @@ export const vi: Messages = {
     creator: (openId) => `  Người tạo: ${openId} (chủ ứng dụng Lark — luôn được phép dùng bot)`,
     creatorUnresolved:
       '  ⚠️ Chưa lấy được open_id của người quét mã; bridge sẽ tự xác định chủ ứng dụng khi khởi động lần đầu.',
+  },
+  models: {
+    labels: {
+      default: 'Theo mặc định (không chỉ định)',
+      'claude-opus-4-8': 'Opus 4.8 (mới nhất · sâu nhất — đốt token 5h nhanh nhất)',
+      'claude-opus-4-7': 'Opus 4.7 (suy nghĩ sâu — đốt token 5h nhanh)',
+      'claude-sonnet-5': 'Sonnet 5 (mới nhất · cân bằng)',
+      'claude-sonnet-4-6': 'Sonnet 4.6 (cân bằng)',
+      'claude-haiku-4-5': 'Haiku 4.5 (mới nhất · nhanh nhất, tốn ít token nhất)',
+      opusplan: 'Opus Plan (Opus lên kế hoạch, Sonnet thực thi)',
+      'gpt-5-codex': 'GPT-5 Codex',
+      'gpt-5': 'GPT-5',
+      o3: 'o3',
+    },
   },
   bootstrap: {
     configSaved: (path) => `Đã lưu cấu hình vào ${path}`,

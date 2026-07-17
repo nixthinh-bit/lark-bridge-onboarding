@@ -17,14 +17,54 @@ const PACKS: Record<Lang, Messages> = { zh, en, vi };
  */
 let current: Lang = 'zh';
 
+/**
+ * True once the language was chosen deliberately for this process (`--lang`,
+ * or `LARK_CHANNEL_LANG`) rather than inferred from the ambient locale. A
+ * deliberate choice outranks the stored profile preference; an inferred one
+ * does not — see {@link applyProfileLang}.
+ */
+let pinned = false;
+
 /** The active language. */
 export function getLang(): Lang {
   return current;
 }
 
-/** Select the active language. Call once, from a CLI entry point. */
+/** Select the active language deliberately. Outranks the profile preference. */
 export function setLang(lang: Lang): void {
   current = lang;
+  pinned = true;
+}
+
+/**
+ * Seed the language from the environment, at a CLI entry point. Only counts as
+ * a deliberate choice when `LARK_CHANNEL_LANG` names it — a plain OS locale is
+ * an inference, and loses to whatever the operator picked in `/config`.
+ */
+export function initLangFromEnv(env: NodeJS.ProcessEnv = process.env): void {
+  current = detectLang(env);
+  pinned = parseLang(env.LARK_CHANNEL_LANG) !== undefined;
+}
+
+/**
+ * Apply the language stored on the profile (set from `/config` inside Lark).
+ *
+ * This is the only path that reaches the daemon. It is started by launchd /
+ * systemd with a near-empty environment — no `LANG` — so locale detection
+ * always lands on the default there, and every card would render in Chinese
+ * no matter what the operator's terminal says. The stored preference is what
+ * makes the in-chat language stick across restarts.
+ *
+ * A deliberate `--lang` / `LARK_CHANNEL_LANG` still wins, so a one-off run can
+ * always override the stored value.
+ */
+export function applyProfileLang(lang: Lang | undefined): void {
+  if (lang && !pinned) current = lang;
+}
+
+/** True when `value` names a language this build can render. */
+export function isLang(value: unknown): value is Lang {
+  return value === 'zh' || value === 'en' || value === 'vi';
 }
 
 /** The message pack for the active language. */

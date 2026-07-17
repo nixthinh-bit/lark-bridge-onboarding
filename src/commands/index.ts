@@ -5,6 +5,7 @@ import { dirname, isAbsolute } from 'node:path';
 import type { LarkChannel, NormalizedMessage } from '@larksuite/channel';
 import { claudeCapability, codexCapability } from '../agent/capability';
 import { DEFAULT_MODEL, normalizeModelSelection, supportedModels } from '../agent/models';
+import { getLang, isLang, setLang } from '../i18n';
 import type { AgentAdapter } from '../agent/types';
 import type { ActiveRuns } from '../bot/active-runs';
 import {
@@ -1770,6 +1771,7 @@ async function showConfigForm(ctx: CommandContext): Promise<void> {
   const ms = getRunIdleTimeoutMs(ctx.controls.cfg);
   const access = ctx.controls.profileConfig.access;
   const card = configFormCard({
+    lang: getLang(),
     agentKind: ctx.controls.profileConfig.agentKind,
     mode: ctx.controls.profileConfig.mode,
     model: normalizeModelSelection(
@@ -1839,6 +1841,11 @@ async function submitConfig(ctx: CommandContext): Promise<void> {
     ? rawModel
     : normalizeModelSelection(agentKind, ctx.controls.cfg.preferences?.model);
   const model = modelSelection === DEFAULT_MODEL ? undefined : modelSelection;
+  // Parse the language picker. An unrecognised value keeps the current
+  // selection rather than resetting it — a bad submit should never strand
+  // someone in a language they can't read.
+  const rawLang = String(fv.lang ?? '').trim();
+  const lang = isLang(rawLang) ? rawLang : (ctx.controls.cfg.preferences?.lang ?? getLang());
   const rawCotMessages = String(fv.cot_messages ?? '').trim();
   const cotMessages =
     rawCotMessages === 'brief'
@@ -1917,6 +1924,7 @@ async function submitConfig(ctx: CommandContext): Promise<void> {
 
     const nextPreferences: AppPreferences = {
       ...(ctx.controls.cfg.preferences ?? {}),
+      lang,
       model,
       messageReply,
       // Mark the messageReply value as living in the new (post-0.1.27)
@@ -1944,6 +1952,11 @@ async function submitConfig(ctx: CommandContext): Promise<void> {
         failureStep = 'config.save';
       }
       await savePreferencesConfig(ctx, nextPreferences, requireMentionInGroup, larkCliIdentity, mode);
+      // Apply to the live process, not just to disk: the point of the picker
+      // is that the next card comes back in the chosen language, without
+      // waiting for a daemon restart. Only after a successful save, so a
+      // failed submit leaves the running language matching what's stored.
+      setLang(lang);
     } catch (err) {
       let rollbackFailed = false;
       if (larkCliIdentityChanged) {
@@ -1985,6 +1998,7 @@ async function submitConfig(ctx: CommandContext): Promise<void> {
       ctx,
       formMsgId,
       configSavedCard({
+        lang,
         agentKind,
         mode,
         model: modelSelection,

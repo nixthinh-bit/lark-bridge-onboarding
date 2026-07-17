@@ -1,9 +1,19 @@
 import { modelLabel, supportedModels } from '../agent/models';
+import type { Lang } from '../i18n';
 import type { KnownChat } from '../bot/lark-info';
 import type { AgentKind, LarkCliIdentityPreset, ProfileMode } from '../config/profile-schema';
 import type { CotMessagesMode, MessageReplyMode } from '../config/schema';
 
+/** Endonyms — each language names itself, so the picker is readable from any. */
+const LANG_LABEL: Record<Lang, string> = {
+  zh: '中文',
+  en: 'English',
+  vi: 'Tiếng Việt',
+};
+
 export interface ConfigFormOpts {
+  /** Language the bridge writes in. Also the language of this card. */
+  lang: Lang;
   /** Profile's agent kind — decides which model catalog the picker shows. */
   agentKind: AgentKind;
   /** Deployment mode: 'personal' (default) or 'team'. */
@@ -123,6 +133,28 @@ export function configFormCard(opts: ConfigFormOpts): object {
           tag: 'form',
           name: 'config_form',
           elements: [
+            // Deliberately first, and deliberately labelled in all three
+            // languages: someone who cannot read the current one has to be
+            // able to find this control, and it is the only way out.
+            {
+              tag: 'markdown',
+              content:
+                '**语言 / Language / Ngôn ngữ**\n' +
+                '_Bot 回复和卡片使用的语言。守护进程没有系统语言环境，所以这里选定后会记住。_\n' +
+                '_The language of cards and replies. Stored here because the daemon has no OS locale._\n' +
+                '_Ngôn ngữ của thẻ và tin nhắn. Lưu ở đây vì tiến trình nền không có ngôn ngữ hệ thống._',
+            },
+            {
+              tag: 'select_static',
+              name: 'lang',
+              initial_option: opts.lang,
+              options: [
+                { text: { tag: 'plain_text', content: '中文' }, value: 'zh' },
+                { text: { tag: 'plain_text', content: 'English' }, value: 'en' },
+                { text: { tag: 'plain_text', content: 'Tiếng Việt' }, value: 'vi' },
+              ],
+            },
+            { tag: 'hr' },
             {
               tag: 'markdown',
               content:
@@ -334,6 +366,7 @@ export function configSavedCard(opts: ConfigFormOpts): object {
           tag: 'markdown',
           content:
             '✅ **偏好已保存**\n\n' +
+            `**语言 / Language**:\`${LANG_LABEL[opts.lang]}\`\n` +
             `**运行模式**:\`${opts.mode === 'team' ? '团队版' : '个人版'}\`\n` +
             `**模型**:\`${modelLabel(opts.agentKind, opts.model)}\`\n` +
             `**消息回复方式**:${replyLabel}\n` +

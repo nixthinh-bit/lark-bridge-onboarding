@@ -24,13 +24,17 @@ import {
   runServiceUnregister,
 } from './commands/service';
 import { runStart } from './commands/start';
-import { detectLang, setLang } from '../i18n';
+import { detectLang, initLangFromEnv, setLang } from '../i18n';
 
-// Resolve the language before any command runs, so preflight errors and the
+// Seed the language before any command runs, so preflight errors and the
 // registration wizard speak the operator's language. Doing it here (rather
 // than as an import side effect of the i18n module) keeps library consumers
 // and the test suite on the default pack unless they opt in.
-setLang(detectLang());
+//
+// This is only a seed: once a profile is loaded, its stored language wins
+// unless --lang / LARK_CHANNEL_LANG named one deliberately. That matters for
+// the daemon, which launchd starts with no locale at all.
+initLangFromEnv();
 
 const program = new Command();
 

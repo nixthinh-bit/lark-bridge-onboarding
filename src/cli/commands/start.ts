@@ -1,6 +1,7 @@
 import dns from 'node:dns';
 import os from 'node:os';
 import { createInterface } from 'node:readline';
+import { applyProfileLang } from '../../i18n';
 import pkg from '../../../package.json';
 import { ClaudeAdapter } from '../../agent/claude/adapter';
 import { CodexAdapter } from '../../agent/codex/adapter';
@@ -98,6 +99,11 @@ export async function runStart(opts: StartOptions): Promise<void> {
   const appPaths = runtime.appPaths;
   let profileConfig = runtime.profileConfig;
   configureLogger({ logsDir: appPaths.logsDir });
+
+  // The profile's language wins from here on, unless --lang named one. This is
+  // the only way the daemon learns it: launchd / systemd give it no locale, so
+  // the env-based seed in cli/index.ts always resolves to the default there.
+  applyProfileLang(cfg.preferences?.lang);
 
   await preFlightChecks({
     skipCheckLarkCli: opts.skipCheckLarkCli,

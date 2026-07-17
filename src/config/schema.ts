@@ -1,3 +1,5 @@
+import type { Lang } from '../i18n';
+
 export type TenantBrand = 'feishu' | 'lark';
 
 /**
@@ -87,6 +89,17 @@ export interface AppAccess {
 }
 
 export interface AppPreferences {
+  /**
+   * Language for everything the bridge writes — cards, slash-command replies,
+   * terminal output. Picked from `/config` inside Lark.
+   *
+   * Stored rather than detected because the daemon is what renders the cards,
+   * and launchd / systemd start it with no locale in its environment: without
+   * this, detection there always lands on the default and every card comes out
+   * in Chinese regardless of the operator's terminal. `undefined` falls back to
+   * the process locale; an explicit `--lang` still wins.
+   */
+  lang?: Lang;
   /** Reply rendering mode for IM (group/p2p) messages. Default 'card'. */
   messageReply?: MessageReplyMode;
   /**

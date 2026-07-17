@@ -1,4 +1,5 @@
 import type { AgentKind } from '../config/profile-schema';
+import { t } from '../i18n';
 
 /**
  * Sentinel selection meaning "don't pass `--model`; let the agent CLI /
@@ -24,28 +25,29 @@ export interface ModelOption {
  * the picker names an exact model. Add new ids here when a generation ships;
  * `opusplan` is kept as the one alias with no versioned equivalent (it runs
  * Opus for planning and Sonnet for execution).
+ *
+ * Values only — labels live in the message catalog, keyed by value, so the
+ * picker speaks the operator's language. Adding an id here without a label
+ * degrades to showing the raw id rather than throwing.
  */
-const CLAUDE_MODELS: ModelOption[] = [
-  { value: DEFAULT_MODEL, label: '跟随默认（不指定）' },
-  { value: 'claude-opus-4-8', label: 'Opus 4.8（最新）' },
-  { value: 'claude-opus-4-7', label: 'Opus 4.7' },
-  { value: 'claude-sonnet-5', label: 'Sonnet 5（最新）' },
-  { value: 'claude-sonnet-4-6', label: 'Sonnet 4.6' },
-  { value: 'claude-haiku-4-5', label: 'Haiku 4.5（最新）' },
-  { value: 'opusplan', label: 'Opus Plan（规划用 Opus，执行用 Sonnet）' },
+const CLAUDE_MODEL_VALUES: readonly string[] = [
+  DEFAULT_MODEL,
+  'claude-opus-4-8',
+  'claude-opus-4-7',
+  'claude-sonnet-5',
+  'claude-sonnet-4-6',
+  'claude-haiku-4-5',
+  'opusplan',
 ];
 
 /** Codex CLI models. Forwarded to `codex exec --model`. */
-const CODEX_MODELS: ModelOption[] = [
-  { value: DEFAULT_MODEL, label: '跟随默认（不指定）' },
-  { value: 'gpt-5-codex', label: 'GPT-5 Codex' },
-  { value: 'gpt-5', label: 'GPT-5' },
-  { value: 'o3', label: 'o3' },
-];
+const CODEX_MODEL_VALUES: readonly string[] = [DEFAULT_MODEL, 'gpt-5-codex', 'gpt-5', 'o3'];
 
-/** The model picker options for a profile's agent kind. */
+/** The model picker options for a profile's agent kind, in the active language. */
 export function supportedModels(agentKind: AgentKind): ModelOption[] {
-  return agentKind === 'codex' ? CODEX_MODELS : CLAUDE_MODELS;
+  const labels = t().models.labels;
+  const values = agentKind === 'codex' ? CODEX_MODEL_VALUES : CLAUDE_MODEL_VALUES;
+  return values.map((value) => ({ value, label: labels[value] ?? value }));
 }
 
 /** True when the selection means "use the agent default" (no `--model`). */

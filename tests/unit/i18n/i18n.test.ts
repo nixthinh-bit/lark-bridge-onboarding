@@ -1,6 +1,15 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import { supportedModels } from '../../../src/agent/models.js';
 import { AgentPreflightError, formatAgentPreflightError } from '../../../src/agent/preflight.js';
-import { detectLang, getLang, setLang, t } from '../../../src/i18n/index.js';
+import {
+  applyProfileLang,
+  detectLang,
+  getLang,
+  initLangFromEnv,
+  isLang,
+  setLang,
+  t,
+} from '../../../src/i18n/index.js';
 
 const notFound = (agentName: string): AgentPreflightError =>
   new AgentPreflightError({
@@ -39,6 +48,108 @@ describe('detectLang', () => {
 
   it('ignores empty values rather than treating them as a selection', () => {
     expect(detectLang({ LARK_CHANNEL_LANG: '', LANG: 'vi_VN' })).toBe('vi');
+  });
+});
+
+describe('isLang', () => {
+  it('accepts only languages this build can render', () => {
+    expect(isLang('vi')).toBe(true);
+    expect(isLang('en')).toBe(true);
+    expect(isLang('zh')).toBe(true);
+    expect(isLang('fr')).toBe(false);
+    expect(isLang('')).toBe(false);
+    expect(isLang(undefined)).toBe(false);
+  });
+});
+
+describe('profile language', () => {
+  afterEach(() => {
+    initLangFromEnv({});
+  });
+
+  it('applies the stored preference — the only way the daemon learns it', () => {
+    // launchd/systemd start the daemon with no locale at all, so without this
+    // every card would render in the default language regardless of /config.
+    initLangFromEnv({});
+    expect(getLang()).toBe('zh');
+
+    applyProfileLang('vi');
+    expect(getLang()).toBe('vi');
+  });
+
+  it('lets an ambient OS locale lose to the stored preference', () => {
+    // The operator picked a language inside Lark; the terminal's locale is an
+    // inference and must not override that choice.
+    initLangFromEnv({ LANG: 'en_US.UTF-8' });
+    expect(getLang()).toBe('en');
+
+    applyProfileLang('vi');
+    expect(getLang()).toBe('vi');
+  });
+
+  it('keeps a deliberate LARK_CHANNEL_LANG over the stored preference', () => {
+    initLangFromEnv({ LARK_CHANNEL_LANG: 'en', LANG: 'zh_CN.UTF-8' });
+    expect(getLang()).toBe('en');
+
+    applyProfileLang('vi');
+    expect(getLang()).toBe('en');
+  });
+
+  it('keeps a deliberate --lang (setLang) over the stored preference', () => {
+    initLangFromEnv({});
+    setLang('en');
+
+    applyProfileLang('vi');
+    expect(getLang()).toBe('en');
+  });
+
+  it('ignores an unset preference rather than resetting the language', () => {
+    initLangFromEnv({ LANG: 'vi_VN.UTF-8' });
+    applyProfileLang(undefined);
+    expect(getLang()).toBe('vi');
+  });
+});
+
+describe('model picker', () => {
+  afterEach(() => {
+    setLang('zh');
+  });
+
+  it('reproduces upstream wording verbatim on the default pack', () => {
+    // This fork adds languages; it does not reword the original.
+    const labels = new Map(supportedModels('claude').map((m) => [m.value, m.label]));
+    expect(labels.get('claude-opus-4-8')).toBe('Opus 4.8（最新）');
+    expect(labels.get('default')).toBe('跟随默认（不指定）');
+  });
+
+  it('warns about quota cost in the picker itself, where the choice is made', () => {
+    setLang('vi');
+    const vi = new Map(supportedModels('claude').map((m) => [m.value, m.label]));
+    expect(vi.get('claude-opus-4-8')).toContain('token 5h');
+    expect(vi.get('claude-haiku-4-5')).toContain('tốn ít token nhất');
+
+    setLang('en');
+    const en = new Map(supportedModels('claude').map((m) => [m.value, m.label]));
+    expect(en.get('claude-opus-4-8')).toContain('burns your quota fastest');
+  });
+
+  it('keeps model names untranslated — they are proper nouns', () => {
+    for (const lang of ['zh', 'en', 'vi'] as const) {
+      setLang(lang);
+      for (const model of supportedModels('claude')) {
+        if (model.value === 'default') continue;
+        expect(model.label).toMatch(/Opus|Sonnet|Haiku/);
+      }
+    }
+  });
+
+  it('offers the same values in every language, so a stored choice stays valid', () => {
+    const values = (lang: 'zh' | 'en' | 'vi'): string[] => {
+      setLang(lang);
+      return supportedModels('claude').map((m) => m.value);
+    };
+    expect(values('vi')).toEqual(values('zh'));
+    expect(values('en')).toEqual(values('zh'));
   });
 });
 
