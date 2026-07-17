@@ -1,6 +1,7 @@
 import { registerApp } from '@larksuite/channel';
 import qrcode from 'qrcode-terminal';
 import type { AppConfig, TenantBrand } from '../config/schema';
+import { t } from '../i18n';
 
 export interface ScopeGrantLink {
   /** Authorization URL — opening it lands on the confirm page with the new
@@ -55,22 +56,23 @@ export async function requestScopeGrantLink(opts: {
 }
 
 export async function runRegistrationWizard(): Promise<AppConfig> {
-  console.log('\n未检测到飞书应用配置，进入扫码创建向导。\n');
+  const m = t().wizard;
+  console.log(`\n${m.noAppConfig}\n`);
 
   const result = await registerApp({
     source: 'lark-channel-bridge',
     onQRCodeReady: (info) => {
-      console.log('请用飞书 App 扫描以下二维码完成应用创建：\n');
+      console.log(`${m.scanPrompt}\n`);
       qrcode.generate(info.url, { small: true });
       const mins = Math.max(1, Math.round(info.expireIn / 60));
-      console.log(`\n二维码有效期：约 ${mins} 分钟`);
-      console.log(`也可以直接在浏览器打开：${info.url}\n`);
+      console.log(`\n${m.qrExpiry(mins)}`);
+      console.log(`${m.openInBrowser(info.url)}\n`);
     },
     onStatusChange: (info) => {
       if (info.status === 'domain_switched') {
-        console.log('识别到国际版租户，已切换到 larksuite.com 域名。');
+        console.log(m.domainSwitched);
       } else if (info.status === 'slow_down') {
-        console.log('轮询速度过快，已自动降速。');
+        console.log(m.slowedDown);
       }
     },
   });
@@ -78,14 +80,10 @@ export async function runRegistrationWizard(): Promise<AppConfig> {
   const tenant: TenantBrand = result.user_info?.tenant_brand ?? 'feishu';
   const operatorOpenId = result.user_info?.open_id;
 
-  console.log('\n✓ 应用创建成功');
+  console.log(`\n${m.appCreated}`);
   console.log(`  App ID:  ${result.client_id}`);
   console.log(`  Tenant:  ${tenant}`);
-  if (operatorOpenId) {
-    console.log(`  Creator: ${operatorOpenId} (Lark 应用 owner，自动豁免访问控制)`);
-  } else {
-    console.log('  ⚠️ 未拿到扫码用户的 open_id；启动后会通过应用 owner API 解析创建者。');
-  }
+  console.log(operatorOpenId ? m.creator(operatorOpenId) : m.creatorUnresolved);
 
   // No access fields are seeded here. The bot creator is resolved at
   // runtime from the Lark application API (`application/v6/applications`),

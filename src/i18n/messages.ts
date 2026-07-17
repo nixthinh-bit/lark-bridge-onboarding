@@ -1,0 +1,255 @@
+/**
+ * Terminal-facing message catalog.
+ *
+ * Scope is deliberately narrow: the strings a user reads while *installing* and
+ * *first running* the bridge (agent preflight + the QR registration wizard).
+ * In-chat card strings are not covered yet.
+ *
+ * Parameterised strings are functions rather than placeholder templates so the
+ * compiler checks every argument at every call site, and a missing translation
+ * is a type error rather than a silent `{0}` leaking to the terminal.
+ */
+export interface Messages {
+  wizard: {
+    noAppConfig: string;
+    scanPrompt: string;
+    qrExpiry: (minutes: number) => string;
+    openInBrowser: (url: string) => string;
+    domainSwitched: string;
+    slowedDown: string;
+    appCreated: string;
+    creator: (openId: string) => string;
+    creatorUnresolved: string;
+  };
+  bootstrap: {
+    configSaved: (path: string) => string;
+    noConfigNonInteractive: string;
+    missingSecretNonInteractive: (appId: string) => string;
+    appSecretPrompt: (appId: string) => string;
+    credentialsOk: string;
+    credentialsOkNamed: (botName: string) => string;
+    multipleAgentsNonInteractive: string;
+    multipleAgentsDetected: string;
+    agentPickerIntro: string;
+    agentPickerQuestion: string;
+    agentPickerCancelled: string;
+    agentSelected: (agent: string) => string;
+    startCancelled: string;
+  };
+  preflight: {
+    errorCode: (code: string) => string;
+    notFoundTitle: (agent: string) => string;
+    notFoundHint: (agent: string) => string;
+    notExecutableTitle: (agent: string) => string;
+    notExecutableHint: (agent: string) => string;
+    resolveFailedTitle: (agent: string) => string;
+    resolveFailedHint: string;
+    notReadableTitle: (agent: string) => string;
+    notReadableHint: (agent: string) => string;
+    spawnFailedTitle: (agent: string, command: string) => string;
+    runCommandHint: string;
+    timeoutTitle: (agent: string, command: string) => string;
+    timeoutHint: string;
+    signaledTitle: (agent: string, command: string, signal: string) => string;
+    signaledConfirm: string;
+    signaledHint: (agent: string) => string;
+    nonzeroExitTitle: (agent: string, command: string, exitCode: string) => string;
+    emptyOutputTitle: (agent: string, command: string) => string;
+    emptyOutputHint: (agent: string) => string;
+  };
+}
+
+/**
+ * Chinese — the original upstream wording, kept verbatim. This is the default
+ * pack, so behaviour is unchanged unless a language is explicitly selected.
+ * Existing tests assert against these exact strings; do not reword them.
+ */
+export const zh: Messages = {
+  wizard: {
+    noAppConfig: '未检测到飞书应用配置，进入扫码创建向导。',
+    scanPrompt: '请用飞书 App 扫描以下二维码完成应用创建：',
+    qrExpiry: (minutes) => `二维码有效期：约 ${minutes} 分钟`,
+    openInBrowser: (url) => `也可以直接在浏览器打开：${url}`,
+    domainSwitched: '识别到国际版租户，已切换到 larksuite.com 域名。',
+    slowedDown: '轮询速度过快，已自动降速。',
+    appCreated: '✓ 应用创建成功',
+    creator: (openId) => `  Creator: ${openId} (Lark 应用 owner，自动豁免访问控制)`,
+    creatorUnresolved:
+      '  ⚠️ 未拿到扫码用户的 open_id；启动后会通过应用 owner API 解析创建者。',
+  },
+  bootstrap: {
+    configSaved: (path) => `配置已保存到 ${path}`,
+    noConfigNonInteractive:
+      '当前没有配置，非交互模式无法完成扫码创建应用。' +
+      '请先在终端运行 `lark-channel-bridge run` 完成首次初始化，' +
+      '或传入 --app-id 和 --app-secret。',
+    missingSecretNonInteractive: (appId) =>
+      `非交互模式缺少 App Secret: ${appId}。` +
+      '请传入 --app-secret <secret>，或在终端中重新运行命令后按提示输入。',
+    appSecretPrompt: (appId) => `输入 ${appId} 的 App Secret: `,
+    credentialsOk: '✓ 应用凭证校验通过',
+    credentialsOkNamed: (botName) => `✓ 应用凭证校验通过: ${botName}`,
+    multipleAgentsNonInteractive:
+      '检测到多个本地 agent，请使用 --agent <claude|codex> 指定要初始化哪一个。',
+    multipleAgentsDetected: '已检测到：',
+    agentPickerIntro: '选择本地 agent',
+    agentPickerQuestion: '检测到多个本地 agent，本次要初始化哪一个？',
+    agentPickerCancelled: '已取消 agent 选择。',
+    agentSelected: (agent) => `已选择 ${agent}`,
+    startCancelled: '已取消启动。',
+  },
+  preflight: {
+    errorCode: (code) => `错误码：${code}`,
+    notFoundTitle: (agent) => `✗ 未找到本地 ${agent}。`,
+    notFoundHint: (agent) => `请先安装 ${agent}，或配置正确的可执行文件路径。`,
+    notExecutableTitle: (agent) => `✗ 本地 ${agent} 不可执行。`,
+    notExecutableHint: (agent) => `请检查可执行权限，或重新安装 ${agent}。`,
+    resolveFailedTitle: (agent) => `✗ 本地 ${agent} 路径解析失败。`,
+    resolveFailedHint: '请确认当前配置的可执行文件路径有效后，再重新运行 bridge。',
+    notReadableTitle: (agent) => `✗ 本地 ${agent} 二进制不可读取。`,
+    notReadableHint: (agent) => `请检查文件权限，或重新安装 ${agent}。`,
+    spawnFailedTitle: (agent, command) => `✗ 本地 ${agent} 不可用：无法执行 \`${command}\`。`,
+    runCommandHint: '请先在终端运行同一命令并修复报错。',
+    timeoutTitle: (agent, command) => `✗ 本地 ${agent} 不可用：\`${command}\` 超时未返回。`,
+    timeoutHint: '请先确认该命令能正常结束。',
+    signaledTitle: (agent, command, signal) =>
+      `✗ 本地 ${agent} 不可用：执行 \`${command}\` 时被系统终止（${signal}）。`,
+    signaledConfirm: '请先在终端确认：',
+    signaledHint: (agent) => `修复本地 ${agent} 后，再重新运行 bridge。`,
+    nonzeroExitTitle: (agent, command, exitCode) =>
+      `✗ 本地 ${agent} 不可用：\`${command}\` 退出码为 ${exitCode}。`,
+    emptyOutputTitle: (agent, command) =>
+      `✗ 本地 ${agent} 不可用：\`${command}\` 没有返回版本信息。`,
+    emptyOutputHint: (agent) => `请确认安装的是受支持的 ${agent}。`,
+  },
+};
+
+/** English. */
+export const en: Messages = {
+  wizard: {
+    noAppConfig: 'No Lark app is configured yet. Starting the QR setup wizard.',
+    scanPrompt: 'Scan this QR code with the Lark app to create your app:',
+    qrExpiry: (minutes) => `The QR code is valid for about ${minutes} minute(s).`,
+    openInBrowser: (url) => `You can also open this link in a browser: ${url}`,
+    domainSwitched: 'Detected an international tenant — switched to the larksuite.com domain.',
+    slowedDown: 'Polling too quickly — automatically slowed down.',
+    appCreated: '✓ App created',
+    creator: (openId) => `  Creator: ${openId} (Lark app owner — always allowed to use the bot)`,
+    creatorUnresolved:
+      "  ⚠️ Could not read the scanning user's open_id; the bridge will resolve the app owner on first start.",
+  },
+  bootstrap: {
+    configSaved: (path) => `Config saved to ${path}`,
+    noConfigNonInteractive:
+      'No configuration yet, and the QR app-creation wizard cannot run in non-interactive mode. ' +
+      'Run `lark-channel-bridge run` in a terminal to finish first-time setup, ' +
+      'or pass --app-id and --app-secret.',
+    missingSecretNonInteractive: (appId) =>
+      `Missing App Secret for ${appId} in non-interactive mode. ` +
+      'Pass --app-secret <secret>, or rerun the command in a terminal and enter it when prompted.',
+    appSecretPrompt: (appId) => `Enter the App Secret for ${appId}: `,
+    credentialsOk: '✓ App credentials verified',
+    credentialsOkNamed: (botName) => `✓ App credentials verified: ${botName}`,
+    multipleAgentsNonInteractive:
+      'Multiple local agents detected. Use --agent <claude|codex> to choose which one to initialize.',
+    multipleAgentsDetected: 'Detected:',
+    agentPickerIntro: 'Choose a local agent',
+    agentPickerQuestion: 'Multiple local agents detected. Which one should be initialized?',
+    agentPickerCancelled: 'Agent selection cancelled.',
+    agentSelected: (agent) => `Selected ${agent}`,
+    startCancelled: 'Startup cancelled.',
+  },
+  preflight: {
+    errorCode: (code) => `Error code: ${code}`,
+    notFoundTitle: (agent) => `✗ ${agent} was not found on this machine.`,
+    notFoundHint: (agent) => `Install ${agent} first, or point the bridge at the correct executable path.`,
+    notExecutableTitle: (agent) => `✗ The local ${agent} is not executable.`,
+    notExecutableHint: (agent) => `Check the file's execute permission, or reinstall ${agent}.`,
+    resolveFailedTitle: (agent) => `✗ Could not resolve the path to the local ${agent}.`,
+    resolveFailedHint: 'Make sure the configured executable path is valid, then run the bridge again.',
+    notReadableTitle: (agent) => `✗ The local ${agent} binary is not readable.`,
+    notReadableHint: (agent) => `Check the file permissions, or reinstall ${agent}.`,
+    spawnFailedTitle: (agent, command) =>
+      `✗ The local ${agent} is unusable: \`${command}\` could not be run.`,
+    runCommandHint: 'Run the same command in your terminal and fix the error it reports.',
+    timeoutTitle: (agent, command) =>
+      `✗ The local ${agent} is unusable: \`${command}\` timed out.`,
+    timeoutHint: 'Make sure that command finishes on its own first.',
+    signaledTitle: (agent, command, signal) =>
+      `✗ The local ${agent} is unusable: \`${command}\` was killed by the system (${signal}).`,
+    signaledConfirm: 'Check this in your terminal first:',
+    signaledHint: (agent) => `Fix the local ${agent}, then run the bridge again.`,
+    nonzeroExitTitle: (agent, command, exitCode) =>
+      `✗ The local ${agent} is unusable: \`${command}\` exited with code ${exitCode}.`,
+    emptyOutputTitle: (agent, command) =>
+      `✗ The local ${agent} is unusable: \`${command}\` returned no version information.`,
+    emptyOutputHint: (agent) => `Make sure the installed ${agent} is a supported build.`,
+  },
+};
+
+/**
+ * Vietnamese. Written for readers who are not developers: it says what to do
+ * next in plain language, and avoids transliterating jargon that is clearer
+ * left in English (`open_id`, `bridge`, command names).
+ */
+export const vi: Messages = {
+  wizard: {
+    noAppConfig: 'Chưa có ứng dụng Lark nào được cấu hình. Bắt đầu trình tạo ứng dụng bằng mã QR.',
+    scanPrompt: 'Mở app Lark trên điện thoại và quét mã QR dưới đây để tạo ứng dụng:',
+    qrExpiry: (minutes) => `Mã QR có hiệu lực khoảng ${minutes} phút.`,
+    openInBrowser: (url) => `Hoặc mở link này bằng trình duyệt: ${url}`,
+    domainSwitched: 'Phát hiện tài khoản Lark bản quốc tế — đã tự chuyển sang tên miền larksuite.com.',
+    slowedDown: 'Đang hỏi máy chủ hơi nhanh — đã tự động giảm tốc.',
+    appCreated: '✓ Đã tạo ứng dụng thành công',
+    creator: (openId) => `  Người tạo: ${openId} (chủ ứng dụng Lark — luôn được phép dùng bot)`,
+    creatorUnresolved:
+      '  ⚠️ Chưa lấy được open_id của người quét mã; bridge sẽ tự xác định chủ ứng dụng khi khởi động lần đầu.',
+  },
+  bootstrap: {
+    configSaved: (path) => `Đã lưu cấu hình vào ${path}`,
+    noConfigNonInteractive:
+      'Chưa có cấu hình, và trình tạo ứng dụng bằng mã QR không chạy được ở chế độ không tương tác. ' +
+      'Hãy mở terminal và chạy `lark-channel-bridge run` để cài lần đầu, ' +
+      'hoặc truyền vào --app-id và --app-secret.',
+    missingSecretNonInteractive: (appId) =>
+      `Thiếu App Secret của ${appId} ở chế độ không tương tác. ` +
+      'Hãy truyền --app-secret <secret>, hoặc chạy lại lệnh trong terminal rồi nhập khi được hỏi.',
+    appSecretPrompt: (appId) => `Nhập App Secret của ${appId}: `,
+    credentialsOk: '✓ Ứng dụng đã xác thực thành công',
+    credentialsOkNamed: (botName) => `✓ Ứng dụng đã xác thực thành công: ${botName}`,
+    multipleAgentsNonInteractive:
+      'Máy này có nhiều agent. Dùng --agent <claude|codex> để chọn cài cái nào.',
+    multipleAgentsDetected: 'Đã tìm thấy:',
+    agentPickerIntro: 'Chọn agent trên máy',
+    agentPickerQuestion: 'Máy này có nhiều agent. Lần này bạn muốn dùng cái nào?',
+    agentPickerCancelled: 'Đã huỷ chọn agent.',
+    agentSelected: (agent) => `Đã chọn ${agent}`,
+    startCancelled: 'Đã huỷ khởi động.',
+  },
+  preflight: {
+    errorCode: (code) => `Mã lỗi: ${code}`,
+    notFoundTitle: (agent) => `✗ Không tìm thấy ${agent} trên máy này.`,
+    notFoundHint: (agent) => `Hãy cài ${agent} trước, hoặc chỉ cho bridge đường dẫn đúng tới file chạy.`,
+    notExecutableTitle: (agent) => `✗ File ${agent} trên máy không chạy được.`,
+    notExecutableHint: (agent) => `Kiểm tra quyền thực thi của file, hoặc cài lại ${agent}.`,
+    resolveFailedTitle: (agent) => `✗ Không tìm được đường dẫn tới ${agent} trên máy.`,
+    resolveFailedHint: 'Hãy kiểm tra lại đường dẫn file chạy đã cấu hình, rồi chạy bridge lại.',
+    notReadableTitle: (agent) => `✗ Không đọc được file ${agent} trên máy.`,
+    notReadableHint: (agent) => `Kiểm tra quyền của file, hoặc cài lại ${agent}.`,
+    spawnFailedTitle: (agent, command) =>
+      `✗ Không dùng được ${agent} trên máy: không chạy được \`${command}\`.`,
+    runCommandHint: 'Hãy chạy đúng lệnh đó trong terminal và sửa lỗi mà nó báo.',
+    timeoutTitle: (agent, command) =>
+      `✗ Không dùng được ${agent} trên máy: \`${command}\` chạy quá lâu không phản hồi.`,
+    timeoutHint: 'Hãy kiểm tra xem lệnh đó có tự chạy xong được không.',
+    signaledTitle: (agent, command, signal) =>
+      `✗ Không dùng được ${agent} trên máy: \`${command}\` bị hệ thống dừng giữa chừng (${signal}).`,
+    signaledConfirm: 'Hãy thử chạy lệnh này trong terminal trước:',
+    signaledHint: (agent) => `Sửa xong ${agent} trên máy thì chạy bridge lại.`,
+    nonzeroExitTitle: (agent, command, exitCode) =>
+      `✗ Không dùng được ${agent} trên máy: \`${command}\` kết thúc với mã lỗi ${exitCode}.`,
+    emptyOutputTitle: (agent, command) =>
+      `✗ Không dùng được ${agent} trên máy: \`${command}\` không trả về thông tin phiên bản.`,
+    emptyOutputHint: (agent) => `Hãy kiểm tra xem bản ${agent} đã cài có được hỗ trợ không.`,
+  },
+};

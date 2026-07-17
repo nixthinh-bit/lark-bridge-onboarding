@@ -24,13 +24,27 @@ import {
   runServiceUnregister,
 } from './commands/service';
 import { runStart } from './commands/start';
+import { detectLang, setLang } from '../i18n';
+
+// Resolve the language before any command runs, so preflight errors and the
+// registration wizard speak the operator's language. Doing it here (rather
+// than as an import side effect of the i18n module) keeps library consumers
+// and the test suite on the default pack unless they opt in.
+setLang(detectLang());
 
 const program = new Command();
 
 program
   .name('lark-channel-bridge')
   .description('Bridge Feishu/Lark messenger with local CLI coding agents')
-  .version(pkg.version, '-v, --version');
+  .option('--lang <lang>', 'interface language: zh, en, or vi (default: your OS locale)')
+  .version(pkg.version, '-v, --version')
+  // `--lang` is just an inline spelling of LARK_CHANNEL_LANG, so it reuses the
+  // same precedence and the same tolerance for unrecognised values.
+  .hook('preAction', (thisCommand) => {
+    const lang = thisCommand.opts<{ lang?: string }>().lang;
+    if (lang) setLang(detectLang({ ...process.env, LARK_CHANNEL_LANG: lang }));
+  });
 
 // === process-level commands (work directly on bridge processes) ===
 

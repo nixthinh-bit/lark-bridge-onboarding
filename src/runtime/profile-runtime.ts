@@ -3,6 +3,7 @@ import { dirname } from 'node:path';
 import * as p from '@clack/prompts';
 import { runRegistrationWizard } from '../bot/wizard';
 import { detectInstalledAgents, type DetectedAgent } from '../cli/agent-detection';
+import { t } from '../i18n';
 import {
   createBootstrapCodexConfig,
   createBootstrapProfileConfig,
@@ -220,7 +221,7 @@ export async function resolveProfileRuntime(
   const root = createRootConfig(profile, profileConfig, encrypted.secrets);
   await saveRootConfig(root, configPath);
   await writeActiveProfile(appPaths.rootDir, profile);
-  console.log(`配置已保存到 ${configPath}\n`);
+  console.log(`${t().bootstrap.configSaved(configPath)}\n`);
   return { cfg: runtimeProfileConfig(root, profile), profileConfig, configPath, appPaths, profile };
 }
 
@@ -260,7 +261,7 @@ async function bootstrapProfileIntoExistingRoot(args: {
     },
   };
   await saveRootConfig(markPermissionDefaultsMigration(nextRoot, profile), configPath);
-  console.log(`配置已保存到 ${configPath}\n`);
+  console.log(`${t().bootstrap.configSaved(configPath)}\n`);
   return {
     cfg: runtimeProfileConfig(nextRoot, profile),
     profileConfig,
@@ -430,9 +431,7 @@ async function resolveBootstrapAppConfig(opts: ResolveProfileRuntimeOptions): Pr
   if (!opts.appId) {
     if (!isInteractiveTerminal()) {
       throw new Error(
-        '当前没有配置，非交互模式无法完成扫码创建应用。' +
-          '请先在终端运行 `lark-channel-bridge run` 完成首次初始化，' +
-          '或传入 --app-id 和 --app-secret。',
+        t().bootstrap.noConfigNonInteractive,
       );
     }
     return runRegistrationWizard();
@@ -441,11 +440,10 @@ async function resolveBootstrapAppConfig(opts: ResolveProfileRuntimeOptions): Pr
   if (!appSecret) {
     if (!isInteractiveTerminal()) {
       throw new Error(
-        `非交互模式缺少 App Secret: ${opts.appId}。` +
-          '请传入 --app-secret <secret>，或在终端中重新运行命令后按提示输入。',
+        t().bootstrap.missingSecretNonInteractive(opts.appId),
       );
     }
-    appSecret = await promptPassword(`输入 ${opts.appId} 的 App Secret: `);
+    appSecret = await promptPassword(t().bootstrap.appSecretPrompt(opts.appId));
   }
   if (!appSecret) throw new Error('app secret is required');
   const tenant = tenantBrandFromString(opts.tenant);
@@ -454,9 +452,9 @@ async function resolveBootstrapAppConfig(opts: ResolveProfileRuntimeOptions): Pr
     throw new Error(`app credentials validation failed: ${result.reason ?? 'unknown'}`);
   }
   if (result.botName) {
-    console.log(`✓ 应用凭证校验通过: ${result.botName}`);
+    console.log(t().bootstrap.credentialsOkNamed(result.botName));
   } else {
-    console.log('✓ 应用凭证校验通过');
+    console.log(t().bootstrap.credentialsOk);
   }
   return {
     accounts: {
@@ -568,8 +566,8 @@ function formatAmbiguousAgentSelectionError(
 ): string {
   const lines = detected.map((agent) => `  - ${agent.kind}: ${agent.binaryPath}`);
   return [
-    '检测到多个本地 agent，请使用 --agent <claude|codex> 指定要初始化哪一个。',
-    '已检测到：',
+    t().bootstrap.multipleAgentsNonInteractive,
+    t().bootstrap.multipleAgentsDetected,
     ...lines,
   ].join('\n');
 }
@@ -587,9 +585,9 @@ async function selectDetectedAgent(
 
 async function promptForDetectedAgentSelection(detected: DetectedAgent[]): Promise<AgentKind | undefined> {
   if (!process.stdin.isTTY || !process.stdout.isTTY) return undefined;
-  p.intro('选择本地 agent');
+  p.intro(t().bootstrap.agentPickerIntro);
   const selected = await p.select<AgentKind>({
-    message: '检测到多个本地 agent，本次要初始化哪一个？',
+    message: t().bootstrap.agentPickerQuestion,
     options: detected.map((agent) => ({
       value: agent.kind,
       label: displayAgentKind(agent.kind),
@@ -598,10 +596,10 @@ async function promptForDetectedAgentSelection(detected: DetectedAgent[]): Promi
     initialValue: detected[0]?.kind,
   });
   if (p.isCancel(selected)) {
-    p.cancel('已取消 agent 选择。');
-    throw new UserCancelledError('已取消启动。');
+    p.cancel(t().bootstrap.agentPickerCancelled);
+    throw new UserCancelledError(t().bootstrap.startCancelled);
   }
-  p.outro(`已选择 ${displayAgentKind(selected)}`);
+  p.outro(t().bootstrap.agentSelected(displayAgentKind(selected)));
   return selected;
 }
 

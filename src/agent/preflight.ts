@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { spawnProcess } from '../platform/spawn';
 
 export type LocalAgentId = 'claude' | 'codex';
@@ -195,73 +196,41 @@ export function formatAgentPreflightError(err: AgentPreflightError): string {
 
 export function formatAgentPreflightDiagnostic(diagnostic: AgentPreflightDiagnostic): string {
   const command = commandForDisplay(diagnostic);
+  const m = t().preflight;
+  const agent = diagnostic.agentName;
+  const code = m.errorCode(diagnostic.code);
+  /** Every diagnostic renders as: title, blank line, what to do, error code. */
+  const report = (title: string, ...rest: string[]): string =>
+    [title, '', ...rest, code].join('\n');
+
   switch (diagnostic.code) {
     case 'agent-binary-not-found':
-      return [
-        `✗ 未找到本地 ${diagnostic.agentName}。`,
-        '',
-        `请先安装 ${diagnostic.agentName}，或配置正确的可执行文件路径。`,
-        `错误码：${diagnostic.code}`,
-      ].join('\n');
+      return report(m.notFoundTitle(agent), m.notFoundHint(agent));
     case 'agent-binary-not-executable':
-      return [
-        `✗ 本地 ${diagnostic.agentName} 不可执行。`,
-        '',
-        `请检查可执行权限，或重新安装 ${diagnostic.agentName}。`,
-        `错误码：${diagnostic.code}`,
-      ].join('\n');
+      return report(m.notExecutableTitle(agent), m.notExecutableHint(agent));
     case 'agent-binary-resolve-failed':
-      return [
-        `✗ 本地 ${diagnostic.agentName} 路径解析失败。`,
-        '',
-        '请确认当前配置的可执行文件路径有效后，再重新运行 bridge。',
-        `错误码：${diagnostic.code}`,
-      ].join('\n');
+      return report(m.resolveFailedTitle(agent), m.resolveFailedHint);
     case 'agent-binary-not-readable':
-      return [
-        `✗ 本地 ${diagnostic.agentName} 二进制不可读取。`,
-        '',
-        `请检查文件权限，或重新安装 ${diagnostic.agentName}。`,
-        `错误码：${diagnostic.code}`,
-      ].join('\n');
+      return report(m.notReadableTitle(agent), m.notReadableHint(agent));
     case 'agent-version-check-spawn-failed':
-      return [
-        `✗ 本地 ${diagnostic.agentName} 不可用：无法执行 \`${command}\`。`,
-        '',
-        '请先在终端运行同一命令并修复报错。',
-        `错误码：${diagnostic.code}`,
-      ].join('\n');
+      return report(m.spawnFailedTitle(agent, command), m.runCommandHint);
     case 'agent-version-check-timeout':
-      return [
-        `✗ 本地 ${diagnostic.agentName} 不可用：\`${command}\` 超时未返回。`,
-        '',
-        '请先确认该命令能正常结束。',
-        `错误码：${diagnostic.code}`,
-      ].join('\n');
+      return report(m.timeoutTitle(agent, command), m.timeoutHint);
     case 'agent-version-check-signaled':
-      return [
-        `✗ 本地 ${diagnostic.agentName} 不可用：执行 \`${command}\` 时被系统终止（${diagnostic.signal ?? 'unknown'}）。`,
-        '',
-        '请先在终端确认：',
+      return report(
+        m.signaledTitle(agent, command, diagnostic.signal ?? 'unknown'),
+        m.signaledConfirm,
         `  ${command}`,
         '',
-        `修复本地 ${diagnostic.agentName} 后，再重新运行 bridge。`,
-        `错误码：${diagnostic.code}`,
-      ].join('\n');
+        m.signaledHint(agent),
+      );
     case 'agent-version-check-nonzero-exit':
-      return [
-        `✗ 本地 ${diagnostic.agentName} 不可用：\`${command}\` 退出码为 ${diagnostic.exitCode ?? 'unknown'}。`,
-        '',
-        '请先在终端运行同一命令并修复报错。',
-        `错误码：${diagnostic.code}`,
-      ].join('\n');
+      return report(
+        m.nonzeroExitTitle(agent, command, String(diagnostic.exitCode ?? 'unknown')),
+        m.runCommandHint,
+      );
     case 'agent-version-check-empty-output':
-      return [
-        `✗ 本地 ${diagnostic.agentName} 不可用：\`${command}\` 没有返回版本信息。`,
-        '',
-        `请确认安装的是受支持的 ${diagnostic.agentName}。`,
-        `错误码：${diagnostic.code}`,
-      ].join('\n');
+      return report(m.emptyOutputTitle(agent, command), m.emptyOutputHint(agent));
   }
 }
 
