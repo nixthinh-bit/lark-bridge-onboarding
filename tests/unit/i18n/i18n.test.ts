@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { supportedModels } from '../../../src/agent/models.js';
 import { AgentPreflightError, formatAgentPreflightError } from '../../../src/agent/preflight.js';
+import { helpCard, workspacesCard } from '../../../src/card/templates.js';
 import {
   applyProfileLang,
   detectLang,
@@ -150,6 +151,63 @@ describe('model picker', () => {
     };
     expect(values('vi')).toEqual(values('zh'));
     expect(values('en')).toEqual(values('zh'));
+  });
+});
+
+describe('cards follow the active language', () => {
+  afterEach(() => {
+    setLang('zh');
+  });
+
+  const render = (lang: 'zh' | 'en' | 'vi'): string => {
+    setLang(lang);
+    return JSON.stringify(helpCard('Claude Code'));
+  };
+
+  it('renders /help in the active language, buttons included', () => {
+    expect(render('zh')).toContain('💡 使用帮助');
+    expect(render('en')).toContain('💡 Help');
+    expect(render('vi')).toContain('💡 Trợ giúp');
+
+    setLang('vi');
+    const vi = JSON.stringify(helpCard('Claude Code'));
+    expect(vi).toContain('Thư mục làm việc');
+    expect(vi).not.toMatch(/[一-鿿]/);
+  });
+
+  it('reproduces upstream wording verbatim on the default pack', () => {
+    const zh = render('zh');
+    expect(zh).toContain('清空当前 chat 的会话');
+    expect(zh).toContain('📊 状态');
+  });
+
+  it('keeps slash commands and the agent name untranslated', () => {
+    // The command text is what the user types — translating it would make the
+    // help card lie. The agent name is a proper noun.
+    for (const lang of ['zh', 'en', 'vi'] as const) {
+      const card = render(lang);
+      expect(card).toContain('/reset');
+      expect(card).toContain('/doctor');
+      expect(card).toContain('Claude Code');
+    }
+  });
+
+  it('localises the workspaces card, including the empty state', () => {
+    setLang('vi');
+    const vi = JSON.stringify(workspacesCard(undefined, {}));
+    expect(vi).toContain('Chưa lưu thư mục nào');
+    expect(vi).not.toMatch(/[一-鿿]/);
+
+    setLang('zh');
+    expect(JSON.stringify(workspacesCard(undefined, {}))).toContain('暂无命名工作目录。');
+  });
+
+  it('marks the current workspace in the active language', () => {
+    setLang('vi');
+    const card = JSON.stringify(workspacesCard('/tmp/a', { a: '/tmp/a', b: '/tmp/b' }));
+    expect(card).toContain('đang dùng');
+    expect(card).toContain('Chuyển sang đây');
+    expect(card).not.toMatch(/[一-鿿]/);
   });
 });
 

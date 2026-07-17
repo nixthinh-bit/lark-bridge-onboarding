@@ -21,6 +21,51 @@ export interface Messages {
     creator: (openId: string) => string;
     creatorUnresolved: string;
   };
+  cards: {
+    /** Buttons repeated across cards — one definition, one translation. */
+    buttons: {
+      newSession: string;
+      resumeSession: string;
+      workspaces: string;
+      help: string;
+      status: string;
+      switchHere: string;
+      remove: string;
+    };
+    workspaces: {
+      title: string;
+      currentCwd: (cwd: string) => string;
+      unset: string;
+      empty: string;
+      saveHint: string;
+      currentMarker: string;
+    };
+    status: {
+      title: string;
+      /** Appended to the session id when the session predates a `/cd`. */
+      staleSession: string;
+      noSession: string;
+      /** Topic groups get their own session; say so or `/new` looks broken. */
+      topicScopeNote: string;
+      accessLabelFallback: string;
+    };
+    resume: {
+      title: string;
+      currentCwd: (cwd: string) => string;
+      empty: string;
+      currentMarker: string;
+      alreadyCurrent: string;
+      restore: string;
+      lineCount: (n: number) => string;
+    };
+    help: {
+      title: string;
+      commandsHeading: string;
+      /** `/command — description` rows, in display order. */
+      rows: (agentName: string) => string[];
+      fallthrough: (agentName: string) => string;
+    };
+  };
   models: {
     /**
      * Picker label per model value. Model names are proper nouns and stay in
@@ -88,6 +133,66 @@ export const zh: Messages = {
     creator: (openId) => `  Creator: ${openId} (Lark 应用 owner，自动豁免访问控制)`,
     creatorUnresolved:
       '  ⚠️ 未拿到扫码用户的 open_id；启动后会通过应用 owner API 解析创建者。',
+  },
+  cards: {
+    // Verbatim from upstream — do not reword.
+    buttons: {
+      newSession: '🆕 新会话',
+      resumeSession: '🔁 恢复会话',
+      workspaces: '📂 工作目录',
+      help: '💡 帮助',
+      status: '📊 状态',
+      switchHere: '切换到此处',
+      remove: '删除',
+    },
+    workspaces: {
+      title: '📂 工作目录',
+      currentCwd: (cwd) => `当前 cwd：\`${cwd}\``,
+      unset: '(未设置)',
+      empty: '暂无命名工作目录。',
+      saveHint: '💡 发送 `/ws save <name>` 把当前 cwd 存为命名工作目录',
+      currentMarker: '  ← 当前',
+    },
+    status: {
+      title: '📊 当前状态',
+      staleSession: ' ⚠️ 旧 cwd，下一条会新建',
+      noSession: '(无)',
+      topicScopeNote: '_（话题独立 session）_',
+      accessLabelFallback: '(未设置)',
+    },
+    resume: {
+      title: '🔁 恢复历史会话',
+      currentCwd: (cwd) => `当前 cwd：\`${cwd}\``,
+      empty: '此 cwd 下没有历史会话。',
+      currentMarker: '  ← 当前',
+      alreadyCurrent: '已是当前会话',
+      restore: '▸ 恢复此会话',
+      lineCount: (n) => `${n} 条`,
+    },
+    help: {
+      title: '💡 使用帮助',
+      commandsHeading: '**命令列表**',
+      rows: (agent) => [
+        '- `/new` `/reset` — 清空当前 chat 的会话',
+        '- `/new chat [name]` — 新建群+新会话，自动拉你进群',
+        '- `/resume [N]` — 列出并恢复历史会话（最多 N 条）',
+        '- `/cd <path>` — 切换工作目录（会重置 session）',
+        '- `/ws list|save <name>|use <name>|remove <name>` — 工作目录',
+        '- `/account` — 查看当前应用；`/account change` 换 appId/secret 并重连',
+        '- `/config` — 调整偏好、访问控制和 lark-cli 身份策略',
+        '- `/status` — 当前状态',
+        '- `/stop` — 结束当前正在跑的任务（也可点卡片底部 ⏹ 终止 按钮）',
+        '- `/stop comment:<scopeHash>` — 管理员停止云文档评论任务',
+        '- `/timeout [N|off|default]` — 当前 session 的探活分钟数,`/config` 改全局默认',
+        '- `/timeout comment:<scopeHash> N` — 管理员设置云文档评论任务探活',
+        '- `/ps` — 列出本机所有 bot,标识当前正在回复的那个',
+        '- `/exit <id|#>` — 关掉指定 bot(用 `/ps` 看 id/序号)',
+        '- `/reconnect` — 强制重连 WebSocket(网络抖动后 bot 没反应时用)',
+        `- \`/doctor [描述]\` — 把日志和描述交给 ${agent} 自助诊断`,
+        '- `/help` — 本帮助',
+      ],
+      fallthrough: (agent) => `其他内容直接交给 ${agent}。`,
+    },
   },
   models: {
     // Verbatim from upstream — do not reword; tests assert these exactly.
@@ -164,6 +269,65 @@ export const en: Messages = {
     creator: (openId) => `  Creator: ${openId} (Lark app owner — always allowed to use the bot)`,
     creatorUnresolved:
       "  ⚠️ Could not read the scanning user's open_id; the bridge will resolve the app owner on first start.",
+  },
+  cards: {
+    buttons: {
+      newSession: '🆕 New session',
+      resumeSession: '🔁 Resume',
+      workspaces: '📂 Workspaces',
+      help: '💡 Help',
+      status: '📊 Status',
+      switchHere: 'Switch here',
+      remove: 'Delete',
+    },
+    workspaces: {
+      title: '📂 Workspaces',
+      currentCwd: (cwd) => `Current directory: \`${cwd}\``,
+      unset: '(not set)',
+      empty: 'No saved workspaces yet.',
+      saveHint: '💡 Send `/ws save <name>` to save the current directory as a workspace',
+      currentMarker: '  ← current',
+    },
+    status: {
+      title: '📊 Status',
+      staleSession: ' ⚠️ from an older directory — the next message starts a new session',
+      noSession: '(none)',
+      topicScopeNote: '_(this topic has its own session)_',
+      accessLabelFallback: '(not set)',
+    },
+    resume: {
+      title: '🔁 Resume a session',
+      currentCwd: (cwd) => `Current directory: \`${cwd}\``,
+      empty: 'No past sessions in this directory.',
+      currentMarker: '  ← current',
+      alreadyCurrent: 'Already current',
+      restore: '▸ Resume this',
+      lineCount: (n) => `${n} messages`,
+    },
+    help: {
+      title: '💡 Help',
+      commandsHeading: '**Commands**',
+      rows: (agent) => [
+        '- `/new` `/reset` — clear this chat’s session',
+        '- `/new chat [name]` — new group + new session, and adds you to it',
+        '- `/resume [N]` — list and resume past sessions (up to N)',
+        '- `/cd <path>` — switch working directory (resets the session)',
+        '- `/ws list|save <name>|use <name>|remove <name>` — workspaces',
+        '- `/account` — show the current app; `/account change` swaps appId/secret and reconnects',
+        '- `/config` — language, preferences, access control, lark-cli identity',
+        '- `/status` — current status',
+        '- `/stop` — stop the running task (or press ⏹ on the card)',
+        '- `/stop comment:<scopeHash>` — admins: stop a cloud-doc comment task',
+        '- `/timeout [N|off|default]` — idle watchdog for this session; `/config` sets the default',
+        '- `/timeout comment:<scopeHash> N` — admins: idle watchdog for a comment task',
+        '- `/ps` — list bots on this machine, marking the one replying here',
+        '- `/exit <id|#>` — stop a bot (get the id from `/ps`)',
+        '- `/reconnect` — force a WebSocket reconnect (use when the bot goes quiet after a network blip)',
+        `- \`/doctor [description]\` — hand the logs and your description to ${agent} to diagnose`,
+        '- `/help` — this help',
+      ],
+      fallthrough: (agent) => `Anything else goes straight to ${agent}.`,
+    },
   },
   models: {
     labels: {
@@ -245,6 +409,65 @@ export const vi: Messages = {
     creator: (openId) => `  Người tạo: ${openId} (chủ ứng dụng Lark — luôn được phép dùng bot)`,
     creatorUnresolved:
       '  ⚠️ Chưa lấy được open_id của người quét mã; bridge sẽ tự xác định chủ ứng dụng khi khởi động lần đầu.',
+  },
+  cards: {
+    buttons: {
+      newSession: '🆕 Bắt đầu lại',
+      resumeSession: '🔁 Mở lại phiên cũ',
+      workspaces: '📂 Thư mục làm việc',
+      help: '💡 Trợ giúp',
+      status: '📊 Trạng thái',
+      switchHere: 'Chuyển sang đây',
+      remove: 'Xoá',
+    },
+    workspaces: {
+      title: '📂 Thư mục làm việc',
+      currentCwd: (cwd) => `Thư mục hiện tại: \`${cwd}\``,
+      unset: '(chưa đặt)',
+      empty: 'Chưa lưu thư mục nào.',
+      saveHint: '💡 Gõ `/ws save <tên>` để lưu thư mục hiện tại lại, lần sau gọi bằng tên cho nhanh',
+      currentMarker: '  ← đang dùng',
+    },
+    status: {
+      title: '📊 Trạng thái',
+      staleSession: ' ⚠️ thuộc thư mục cũ — tin nhắn tới sẽ mở phiên mới',
+      noSession: '(chưa có)',
+      topicScopeNote: '_(chủ đề này có phiên riêng)_',
+      accessLabelFallback: '(chưa đặt)',
+    },
+    resume: {
+      title: '🔁 Mở lại phiên cũ',
+      currentCwd: (cwd) => `Thư mục hiện tại: \`${cwd}\``,
+      empty: 'Thư mục này chưa có phiên nào cũ.',
+      currentMarker: '  ← đang dùng',
+      alreadyCurrent: 'Đang ở phiên này',
+      restore: '▸ Mở lại phiên này',
+      lineCount: (n) => `${n} tin nhắn`,
+    },
+    help: {
+      title: '💡 Trợ giúp',
+      commandsHeading: '**Các lệnh**',
+      rows: (agent) => [
+        '- `/new` `/reset` — xoá phiên hiện tại, bắt đầu lại từ đầu',
+        '- `/new chat [tên]` — tạo nhóm mới + phiên mới, tự kéo bạn vào nhóm',
+        '- `/resume [N]` — xem và mở lại các phiên cũ (tối đa N phiên)',
+        '- `/cd <đường-dẫn>` — đổi thư mục làm việc (sẽ bắt đầu phiên mới)',
+        '- `/ws list|save <tên>|use <tên>|remove <tên>` — quản lý thư mục làm việc',
+        '- `/account` — xem ứng dụng đang dùng; `/account change` để đổi appId/secret và kết nối lại',
+        '- `/config` — đổi ngôn ngữ, model, quyền truy cập và danh tính lark-cli',
+        '- `/status` — xem trạng thái hiện tại',
+        '- `/stop` — dừng việc đang chạy (hoặc bấm nút ⏹ trên thẻ)',
+        '- `/stop comment:<scopeHash>` — quản trị viên: dừng tác vụ bình luận tài liệu',
+        '- `/timeout [N|off|default]` — số phút chờ trước khi tự dừng phiên này; `/config` đổi mặc định chung',
+        '- `/timeout comment:<scopeHash> N` — quản trị viên: đặt thời gian chờ cho tác vụ bình luận',
+        '- `/ps` — liệt kê các bot trên máy này, đánh dấu cái đang trả lời',
+        '- `/exit <id|#>` — tắt một bot (xem id bằng `/ps`)',
+        '- `/reconnect` — kết nối lại (dùng khi mạng chập chờn xong bot im lặng)',
+        `- \`/doctor [mô tả]\` — đưa log kèm mô tả cho ${agent} tự chẩn đoán`,
+        '- `/help` — bảng trợ giúp này',
+      ],
+      fallthrough: (agent) => `Mọi nội dung khác sẽ được chuyển thẳng cho ${agent}.`,
+    },
   },
   models: {
     labels: {
