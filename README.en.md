@@ -66,13 +66,31 @@ claude auth login
 
 The bridge can auto-install lark-cli, **but only in interactive mode**. Start it as a background service first and it silently skips that step, leaving you wondering why the bot can't reach Lark. Installing lark-cli up front avoids the trap entirely: **[lark-cli-onboarding](https://github.com/nixthinh-bit/lark-cli-onboarding)**.
 
-### 4. Install
+### 4. Install — one command
 
 ```bash
-npm i -g github:nixthinh-bit/lark-bridge-onboarding
+curl -fsSL https://raw.githubusercontent.com/nixthinh-bit/lark-bridge-onboarding/main/install.sh | bash
 ```
 
+It checks Node.js, checks Claude Code (and **asks** before installing it), points you at lark-cli if it's missing, installs the bridge, and tells you what to do next. It never installs Node.js or lark-cli behind your back. Prefix with `LARK_CHANNEL_LANG=vi` for Vietnamese.
+
 > ⚠️ **Already have upstream installed?** This **replaces** it — both share the `lark-channel-bridge` command name. It is a drop-in replacement, so every upstream command still works. To go back: `npm i -g lark-channel-bridge`.
+
+<details>
+<summary>Prefer not to pipe <code>curl</code> into <code>bash</code>?</summary>
+
+```bash
+git clone https://github.com/nixthinh-bit/lark-bridge-onboarding
+cd lark-bridge-onboarding
+npm install     # installs dependencies and builds
+npm i -g .      # install globally
+```
+
+⚠️ This links against the clone, so **don't delete or move it** afterwards.
+
+And **don't reach for `npm i -g github:nixthinh-bit/lark-bridge-onboarding`** — it looks right but **does not work**: npm clones the repo and runs the build, but under `-g` the build tool never lands, so it dies with `tsup: command not found`. That failure is precisely why `install.sh` exists.
+
+</details>
 
 ### 5. First run — just scan the QR code
 
