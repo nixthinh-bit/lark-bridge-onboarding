@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { supportedModels } from '../../../src/agent/models.js';
 import { AgentPreflightError, formatAgentPreflightError } from '../../../src/agent/preflight.js';
+import { configFormCard, configSavedCard } from '../../../src/card/config-card.js';
 import { helpCard, workspacesCard } from '../../../src/card/templates.js';
 import {
   applyProfileLang,
@@ -208,6 +209,75 @@ describe('cards follow the active language', () => {
     expect(card).toContain('đang dùng');
     expect(card).toContain('Chuyển sang đây');
     expect(card).not.toMatch(/[一-鿿]/);
+  });
+});
+
+describe('the /config card', () => {
+  afterEach(() => {
+    setLang('zh');
+  });
+
+  const opts = {
+    lang: 'vi' as const,
+    agentKind: 'claude' as const,
+    mode: 'personal' as const,
+    model: 'claude-opus-4-8',
+    messageReply: 'markdown' as const,
+    showToolCalls: true,
+    cotMessages: 'brief' as const,
+    maxConcurrentRuns: 10,
+    runIdleTimeoutMinutes: 0,
+    requireMentionInGroup: true,
+    larkCliIdentity: 'bot-only' as const,
+    allowedUsers: [],
+    allowedChats: [],
+    admins: [],
+    knownChats: [],
+  };
+
+  it('renders in the active language', () => {
+    setLang('vi');
+    expect(JSON.stringify(configFormCard({ ...opts, lang: 'vi' }))).toContain('Cài đặt');
+    setLang('en');
+    expect(JSON.stringify(configFormCard({ ...opts, lang: 'en' }))).toContain('Preferences');
+    setLang('zh');
+    expect(JSON.stringify(configFormCard({ ...opts, lang: 'zh' }))).toContain('偏好设置');
+  });
+
+  it('always labels the language picker in every language', () => {
+    // The one control someone stranded in a language they can't read must be
+    // able to find. It stays trilingual no matter which pack is active.
+    for (const lang of ['zh', 'en', 'vi'] as const) {
+      setLang(lang);
+      const card = JSON.stringify(configFormCard({ ...opts, lang }));
+      expect(card).toContain('语言 / Language / Ngôn ngữ');
+      // Every option names itself, so each is legible from any pack.
+      expect(card).toContain('中文');
+      expect(card).toContain('English');
+      expect(card).toContain('Tiếng Việt');
+    }
+  });
+
+  it('keeps form field names and stored values stable across languages', () => {
+    // Field names are the wire contract with Lark's form submit, and the
+    // values are what lands in config — translating either would silently
+    // drop the setting on save.
+    for (const lang of ['zh', 'en', 'vi'] as const) {
+      setLang(lang);
+      const card = JSON.stringify(configFormCard({ ...opts, lang }));
+      for (const name of ['lang', 'deploy_mode', 'model', 'message_reply', 'show_tool_calls']) {
+        expect(card).toContain(`"name":"${name}"`);
+      }
+      expect(card).toContain('"value":"personal"');
+      expect(card).toContain('"value":"bot-only"');
+    }
+  });
+
+  it('renders the saved card in the active language, quota hint included', () => {
+    setLang('vi');
+    const saved = JSON.stringify(configSavedCard({ ...opts, lang: 'vi' }));
+    expect(saved).toContain('Đã lưu cài đặt');
+    expect(saved).toContain('đốt token 5h');
   });
 });
 

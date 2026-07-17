@@ -65,6 +65,116 @@ export interface Messages {
       rows: (agentName: string) => string[];
       fallthrough: (agentName: string) => string;
     };
+    /**
+     * The `/config` form. Each setting is a heading plus the prose that
+     * explains what it actually does — that prose is the whole point of the
+     * card for someone who doesn't read code, so it is translated in full
+     * rather than reduced to a label.
+     */
+    config: {
+      summary: string;
+      title: string;
+      intro: string;
+      submit: string;
+      cancel: string;
+      langHeading: string;
+      modeHeading: string;
+      modePersonalNote: string;
+      modeTeamNote: string;
+      modePersonal: string;
+      modeTeam: string;
+      modelHeading: string;
+      modelNote: string;
+      modelDefaultNote: string;
+      replyHeading: string;
+      replyTextNote: string;
+      replyMarkdownNote: string;
+      replyText: string;
+      replyMarkdown: string;
+      replyCard: string;
+      toolsHeading: string;
+      toolsShowNote: string;
+      toolsHideNote: string;
+      toolsShow: string;
+      toolsHide: string;
+      cotHeading: string;
+      cotOffNote: string;
+      cotBriefNote: string;
+      cotDetailedNote: string;
+      cotOff: string;
+      cotBrief: string;
+      cotDetailed: string;
+      concurrencyHeading: string;
+      concurrencyNote: string;
+      concurrencyRange: string;
+      idleHeading: string;
+      idleNote: string;
+      idleRange: string;
+      mentionHeading: string;
+      mentionYesNote: string;
+      mentionNoNote: string;
+      mentionAlwaysNote: string;
+      mentionYes: string;
+      mentionNo: string;
+      identityHeading: string;
+      identityBotOnlyNote: string;
+      identityUserNote: string;
+      identityBotOnly: string;
+      identityUser: string;
+      teamOverrideNote: string;
+      accessPanelTitle: string;
+      accessTeamNote: string;
+      accessNote: string;
+      accessUsersHeading: (n: number) => string;
+      accessUsersHint: string;
+      accessChatsHeading: (n: number) => string;
+      accessChatsAllHint: string;
+      accessChatsHint: string;
+      accessAdminsHeading: (n: number) => string;
+      accessAdminsNote: string;
+      accessAdminsHint: string;
+      none: string;
+      unknownChat: string;
+      empty: string;
+      count: (n: number) => string;
+      savedSummary: string;
+      savedTitle: string;
+      savedLang: string;
+      savedMode: string;
+      savedModel: string;
+      savedReply: string;
+      savedTools: string;
+      savedCot: string;
+      savedConcurrency: string;
+      savedIdle: string;
+      savedMention: string;
+      savedIdentity: string;
+      savedIdentityTeamForced: string;
+      savedAccess: string;
+      savedAccessTeamNote: string;
+      savedEffective: string;
+      minutes: (n: number) => string;
+      off: string;
+      yes: string;
+      no: string;
+      cancelledSummary: string;
+      cancelledBody: string;
+      failedSummary: string;
+      failedBody: (reason: string) => string;
+      /** Shown when @-mention was disabled but the app lacks the scope. */
+      grantSummary: string;
+      grantTitle: string;
+      grantWhy: string;
+      grantLink: (expireMins: number) => string;
+      grantButton: string;
+      grantHow: string;
+      grantFallback: string;
+      grantReconnect: string;
+      grantedSummary: string;
+      grantedTitle: string;
+      grantedBody: string;
+      grantedReconnect: string;
+    };
   };
   models: {
     /**
@@ -192,6 +302,119 @@ export const zh: Messages = {
         '- `/help` — 本帮助',
       ],
       fallthrough: (agent) => `其他内容直接交给 ${agent}。`,
+    },
+    config: {
+      summary: '偏好设置',
+      title: '⚙️ **偏好设置**',
+      intro: '调整 bot 的行为偏好。改完点提交后写入当前 profile 配置；消息和访问控制设置立即生效。',
+      submit: '提交',
+      cancel: '取消',
+      langHeading: '**语言 / Language / Ngôn ngữ**',
+      modeHeading: '**运行模式**',
+      modePersonalNote:
+        '_个人版(默认):Bot 是你一个人的助手,只有你和白名单用户能用,可携带你的个人授权访问文档/日历等_',
+      modeTeamNote:
+        '_团队版:Bot 是团队共用的助手,任何人 @ 即可使用(不做白名单校验);为避免他人借 Bot 动用你的个人权限,此模式下 CLI 强制只用应用(bot)身份,不使用个人授权_',
+      modePersonal: '个人版(默认)',
+      modeTeam: '团队版',
+      modelHeading: '**模型**',
+      modelNote: '_底层 agent 运行使用的模型_',
+      modelDefaultNote: '_「跟随默认」= 不指定,由 CLI/账号决定_',
+      replyHeading: '**消息回复方式**',
+      replyTextNote: '_纯文本:agent 跑完一次性发出,不流式,体感最轻_',
+      replyMarkdownNote: '_消息卡片:轻量流式 markdown 卡片,飞书原生打字机动画_',
+      replyText: '纯文本',
+      replyMarkdown: '消息卡片(默认)',
+      replyCard: '交互卡片',
+      toolsHeading: '\n**工具调用显示**',
+      toolsShowNote: '_显示:可以看到 bot 跑了什么命令、读了哪些文件等过程_',
+      toolsHideNote: '_隐藏:只看 agent 最终的文字答复,跳过所有工具块_',
+      toolsShow: '显示(默认)',
+      toolsHide: '隐藏',
+      cotHeading: '\n**COT 过程消息**',
+      cotOffNote: '_关闭:只发送最终回复_',
+      cotBriefNote: '_简略:展示 agent 过程文本和工具摘要_',
+      cotDetailedNote: '_详细:额外展示工具参数和输出摘要_',
+      cotOff: '关闭',
+      cotBrief: '简略',
+      cotDetailed: '详细',
+      concurrencyHeading: '\n**并发上限**',
+      concurrencyNote: '_全局同时运行的 agent 进程数(主要影响话题群多话题并行场景)_',
+      concurrencyRange: '_默认 10,范围 1-50。超出的请求会 FIFO 排队_',
+      idleHeading: '\n**run 探活(分钟)**',
+      idleNote: '_agent 长时间没输出时自动 kill,防止假死_',
+      idleRange: '_0 = 关闭(默认),范围 1-120。可被 `/timeout` 在单个 scope 覆盖_',
+      mentionHeading: '\n**群里需要 @ bot**',
+      mentionYesNote: '_是(默认):群和话题群里,不 @ bot 的消息不会触发回复,bot 不接群里聊天_',
+      mentionNoNote: '_否:任何消息都会发给 agent(0.1.21 及更早版本的行为)_',
+      mentionAlwaysNote: '_私聊永远不需要 @;`@全员` 永远不响应_',
+      mentionYes: '是(默认)',
+      mentionNo: '否',
+      identityHeading: '\n**lark-cli 身份策略**',
+      identityBotOnlyNote: '_只允许应用身份:使用 bot/app 能力,不访问个人资源_',
+      identityUserNote:
+        '_允许用户身份:保留应用身份,并允许已授权用户访问个人日历、邮箱、云盘等资源_',
+      identityBotOnly: '只允许应用身份',
+      identityUser: '允许用户身份',
+      teamOverrideNote:
+        '\n\n_⚠️ 团队版已开启：本项被覆盖 —— 身份强制为「只允许应用身份」、访问控制不生效。切回个人版后恢复。_',
+      accessPanelTitle: '🔒 **访问控制**（点击展开）',
+      accessTeamNote:
+        '_⚠️ **团队版已开启**：访问控制暂不生效 —— 任何人 @ bot 都能使用（管理命令仍限 owner/管理员）。切回个人版后以下白名单恢复生效。_',
+      accessNote:
+        '_控制谁能通过私聊和群聊使用 bot。**留空 = 不响应聊天消息**。云文档评论按文档权限生效。_',
+      accessUsersHeading: (n) => `**允许私聊的用户**（共 ${n} 人）`,
+      accessUsersHint: '_加 / 删：_ `/invite user @某人`  `/remove user @某人`',
+      accessChatsHeading: (n) => `**允许响应的群**（共 ${n} 个）`,
+      accessChatsAllHint: '_一键加全部 bot 所在的群：_ `/invite all group`',
+      accessChatsHint: '_加 / 删（在目标群里发）：_ `/invite group`  `/remove group`',
+      accessAdminsHeading: (n) => `**管理员**（共 ${n} 人）`,
+      accessAdminsNote:
+        '_可以跑敏感命令：`/account` `/config` `/exit` `/reconnect` `/doctor` `/cd` `/ws` `/invite` `/remove`。管理员也自动获得私聊权限，并可在未白名单群里管理访问控制。_',
+      accessAdminsHint: '_加 / 删：_ `/invite admin @某人`  `/remove admin @某人`',
+      none: '_（暂无）_',
+      unknownChat: '(未知群)',
+      empty: '_(空)_',
+      count: (n) => `${n} 项`,
+      savedSummary: '偏好已保存',
+      savedTitle: '✅ **偏好已保存**',
+      savedLang: '**语言 / Language**',
+      savedMode: '**运行模式**',
+      savedModel: '**模型**',
+      savedReply: '**消息回复方式**',
+      savedTools: '**工具调用显示**',
+      savedCot: '**COT 过程消息**',
+      savedConcurrency: '**并发上限**',
+      savedIdle: '**run 探活**',
+      savedMention: '**群里需要 @ bot**',
+      savedIdentity: '**lark-cli 身份策略**',
+      savedIdentityTeamForced: '只允许应用身份(团队版强制)',
+      savedAccess: '🔒 **访问控制**',
+      savedAccessTeamNote: '（_团队版下不生效,任何人可用_）',
+      savedEffective: '下条消息开始生效。',
+      minutes: (n) => `${n} 分钟`,
+      off: '关闭',
+      yes: '是',
+      no: '否',
+      cancelledSummary: '已取消',
+      cancelledBody: '已取消,未做任何修改。',
+      failedSummary: '保存失败',
+      failedBody: (reason) => `保存失败：${reason}`,
+      grantSummary: '需要补授权',
+      grantTitle: '⚠️ **「群里不需要 @ bot」还差一个权限**',
+      grantWhy:
+        '你已开启「不 @ bot 也回复」，但当前应用没有 **获取群组中所有消息**（`im:message.group_msg`）权限。没有它，飞书不会把群里非 @ 的消息推给 bot，所以这个设置暂时不生效。',
+      grantLink: (mins) => `**点下面的链接补授权**（约 ${mins} 分钟内有效）：`,
+      grantButton: '🔗 点此一键授权',
+      grantHow:
+        '_扫码/点击后会进入确认页，新权限已预填好，确认即可。授权成功后，群里新消息开始自动生效，无需重启。_',
+      grantFallback: '_若链接打不开，可复制：_',
+      grantReconnect: '_授权后若群里仍收不到非 @ 消息，发 `/reconnect` 重连一次即可。_',
+      grantedSummary: '授权成功',
+      grantedTitle: '✅ **授权成功**',
+      grantedBody:
+        '`im:message.group_msg` 权限已生效，群里非 @ bot 的消息从现在开始会触发回复。',
+      grantedReconnect: '_若仍未生效，发 `/reconnect` 重连一次。_',
     },
   },
   models: {
@@ -327,6 +550,124 @@ export const en: Messages = {
         '- `/help` — this help',
       ],
       fallthrough: (agent) => `Anything else goes straight to ${agent}.`,
+    },
+    config: {
+      summary: 'Preferences',
+      title: '⚙️ **Preferences**',
+      intro:
+        'Adjust how the bot behaves. Submitting writes to this profile’s config; message and access settings take effect immediately.',
+      submit: 'Submit',
+      cancel: 'Cancel',
+      langHeading: '**语言 / Language / Ngôn ngữ**',
+      modeHeading: '**Mode**',
+      modePersonalNote:
+        '_Personal (default): the bot is yours alone — only you and allowed users can use it, and it can carry your personal authorization to reach Docs, Calendar, and so on._',
+      modeTeamNote:
+        '_Team: the bot is shared — anyone can @ it, with no allowlist check. So nobody can borrow your personal access through it, the CLI is forced to app (bot) identity only in this mode._',
+      modePersonal: 'Personal (default)',
+      modeTeam: 'Team',
+      modelHeading: '**Model**',
+      modelNote: '_The model the underlying agent runs with._',
+      modelDefaultNote: '_“Follow the default” = don’t pass one; the CLI / account decides._',
+      replyHeading: '**Reply style**',
+      replyTextNote: '_Plain text: sent once when the agent finishes. No streaming, lightest feel._',
+      replyMarkdownNote:
+        '_Message card: a lightweight streaming markdown card with Lark’s native typing animation._',
+      replyText: 'Plain text',
+      replyMarkdown: 'Message card (default)',
+      replyCard: 'Interactive card',
+      toolsHeading: '\n**Show tool calls**',
+      toolsShowNote: '_Show: you can see what commands ran, which files were read, and so on._',
+      toolsHideNote: '_Hide: only the agent’s final written answer; every tool block is skipped._',
+      toolsShow: 'Show (default)',
+      toolsHide: 'Hide',
+      cotHeading: '\n**Progress messages (chain of thought)**',
+      cotOffNote: '_Off: send only the final reply._',
+      cotBriefNote: '_Brief: show the agent’s progress text and a tool summary._',
+      cotDetailedNote: '_Detailed: also show tool arguments and output excerpts._',
+      cotOff: 'Off',
+      cotBrief: 'Brief',
+      cotDetailed: 'Detailed',
+      concurrencyHeading: '\n**Concurrent runs**',
+      concurrencyNote:
+        '_How many agent processes may run at once (mostly matters for parallel topics in a topic group)._',
+      concurrencyRange: '_Default 10, range 1–50. Anything over the cap queues FIFO._',
+      idleHeading: '\n**Idle watchdog (minutes)**',
+      idleNote: '_Kills the agent when it produces no output for this long, so it can’t hang._',
+      idleRange: '_0 = off (default), range 1–120. `/timeout` can override it per scope._',
+      mentionHeading: '\n**Require @ in groups**',
+      mentionYesNote:
+        '_Yes (default): in groups and topic groups, messages that don’t @ the bot are ignored — the bot stays out of the conversation._',
+      mentionNoNote: '_No: every message goes to the agent (the behaviour of 0.1.21 and earlier)._',
+      mentionAlwaysNote: '_DMs never need an @; `@all` is never answered._',
+      mentionYes: 'Yes (default)',
+      mentionNo: 'No',
+      identityHeading: '\n**lark-cli identity policy**',
+      identityBotOnlyNote: '_App identity only: uses bot/app abilities, never personal resources._',
+      identityUserNote:
+        '_Allow user identity: keeps the app identity and additionally lets an authorized user reach their own Calendar, Mail, Drive, and so on._',
+      identityBotOnly: 'App identity only',
+      identityUser: 'Allow user identity',
+      teamOverrideNote:
+        '\n\n_⚠️ Team mode is on, so this is overridden — identity is forced to “app identity only” and access control does not apply. Switching back to Personal restores it._',
+      accessPanelTitle: '🔒 **Access control** (click to expand)',
+      accessTeamNote:
+        '_⚠️ **Team mode is on**: access control does not apply — anyone who @s the bot can use it (admin commands stay limited to the owner/admins). Switching back to Personal restores the lists below._',
+      accessNote:
+        '_Who can use the bot in DMs and groups. **Empty = it answers no chat messages.** Cloud-doc comments follow the document’s own permissions._',
+      accessUsersHeading: (n) => `**Users allowed in DMs** (${n})`,
+      accessUsersHint: '_Add / remove:_ `/invite user @name`  `/remove user @name`',
+      accessChatsHeading: (n) => `**Groups the bot answers in** (${n})`,
+      accessChatsAllHint: '_Add every group the bot is in:_ `/invite all group`',
+      accessChatsHint: '_Add / remove (send inside the group):_ `/invite group`  `/remove group`',
+      accessAdminsHeading: (n) => `**Admins** (${n})`,
+      accessAdminsNote:
+        '_May run sensitive commands: `/account` `/config` `/exit` `/reconnect` `/doctor` `/cd` `/ws` `/invite` `/remove`. Admins also get DM access automatically, and can manage access control from groups that aren’t allowlisted._',
+      accessAdminsHint: '_Add / remove:_ `/invite admin @name`  `/remove admin @name`',
+      none: '_(none)_',
+      unknownChat: '(unknown group)',
+      empty: '_(empty)_',
+      count: (n) => `${n}`,
+      savedSummary: 'Preferences saved',
+      savedTitle: '✅ **Preferences saved**',
+      savedLang: '**Language**',
+      savedMode: '**Mode**',
+      savedModel: '**Model**',
+      savedReply: '**Reply style**',
+      savedTools: '**Show tool calls**',
+      savedCot: '**Progress messages**',
+      savedConcurrency: '**Concurrent runs**',
+      savedIdle: '**Idle watchdog**',
+      savedMention: '**Require @ in groups**',
+      savedIdentity: '**lark-cli identity policy**',
+      savedIdentityTeamForced: 'App identity only (forced by Team mode)',
+      savedAccess: '🔒 **Access control**',
+      savedAccessTeamNote: '(_no effect in Team mode — anyone can use it_)',
+      savedEffective: 'Takes effect from your next message.',
+      minutes: (n) => `${n} min`,
+      off: 'off',
+      yes: 'yes',
+      no: 'no',
+      cancelledSummary: 'Cancelled',
+      cancelledBody: 'Cancelled — nothing was changed.',
+      failedSummary: 'Save failed',
+      failedBody: (reason) => `Save failed: ${reason}`,
+      grantSummary: 'One permission missing',
+      grantTitle: '⚠️ **“No @ needed in groups” is one permission short**',
+      grantWhy:
+        'You turned on replying without an @, but this app is missing **Read all group messages** (`im:message.group_msg`). Without it Lark never delivers un-@ed group messages to the bot, so the setting has no effect yet.',
+      grantLink: (mins) => `**Use the link below to grant it** (valid for about ${mins} minutes):`,
+      grantButton: '🔗 Grant it here',
+      grantHow:
+        '_The link opens a confirmation page with the new permission pre-filled — just confirm. It applies to new group messages right away; no restart needed._',
+      grantFallback: '_If the link won’t open, copy this:_',
+      grantReconnect:
+        '_If un-@ed group messages still don’t arrive afterwards, send `/reconnect` once._',
+      grantedSummary: 'Permission granted',
+      grantedTitle: '✅ **Permission granted**',
+      grantedBody:
+        '`im:message.group_msg` is now active — group messages that don’t @ the bot will trigger a reply from here on.',
+      grantedReconnect: '_If it still doesn’t work, send `/reconnect` once._',
     },
   },
   models: {
@@ -467,6 +808,123 @@ export const vi: Messages = {
         '- `/help` — bảng trợ giúp này',
       ],
       fallthrough: (agent) => `Mọi nội dung khác sẽ được chuyển thẳng cho ${agent}.`,
+    },
+    config: {
+      summary: 'Cài đặt',
+      title: '⚙️ **Cài đặt**',
+      intro:
+        'Chỉnh cách bot hoạt động. Bấm Lưu là ghi vào cấu hình; phần tin nhắn và phân quyền có hiệu lực ngay.',
+      submit: 'Lưu',
+      cancel: 'Huỷ',
+      langHeading: '**语言 / Language / Ngôn ngữ**',
+      modeHeading: '**Chế độ dùng**',
+      modePersonalNote:
+        '_Cá nhân (mặc định): bot là trợ lý riêng của bạn — chỉ bạn và những người bạn cho phép mới dùng được, và bot có thể dùng quyền cá nhân của bạn để đọc Doc, Lịch…_',
+      modeTeamNote:
+        '_Nhóm: bot dùng chung — ai @ cũng được, không kiểm tra danh sách. Để người khác không mượn được quyền cá nhân của bạn, chế độ này bắt buộc bot chỉ dùng danh tính ứng dụng._',
+      modePersonal: 'Cá nhân (mặc định)',
+      modeTeam: 'Nhóm',
+      modelHeading: '**Model**',
+      modelNote: '_Model mà Claude/Codex sẽ chạy._',
+      modelDefaultNote: '_“Theo mặc định” = không chỉ định, để CLI/tài khoản tự quyết._',
+      replyHeading: '**Kiểu trả lời**',
+      replyTextNote: '_Văn bản thuần: chạy xong mới gửi một lần, không chạy chữ, nhẹ nhất._',
+      replyMarkdownNote: '_Thẻ tin nhắn: thẻ markdown chạy chữ theo thời gian thực, kiểu Lark._',
+      replyText: 'Văn bản thuần',
+      replyMarkdown: 'Thẻ tin nhắn (mặc định)',
+      replyCard: 'Thẻ tương tác',
+      toolsHeading: '\n**Hiện các bước bot làm**',
+      toolsShowNote: '_Hiện: bạn thấy bot chạy lệnh gì, đọc file nào…_',
+      toolsHideNote: '_Ẩn: chỉ xem câu trả lời cuối cùng, bỏ qua toàn bộ phần thao tác._',
+      toolsShow: 'Hiện (mặc định)',
+      toolsHide: 'Ẩn',
+      cotHeading: '\n**Tin nhắn tiến trình (dòng suy nghĩ)**',
+      cotOffNote: '_Tắt: chỉ gửi câu trả lời cuối._',
+      cotBriefNote: '_Ngắn gọn: hiện tiến trình và tóm tắt thao tác._',
+      cotDetailedNote: '_Chi tiết: hiện thêm tham số và trích đoạn kết quả._',
+      cotOff: 'Tắt',
+      cotBrief: 'Ngắn gọn',
+      cotDetailed: 'Chi tiết',
+      concurrencyHeading: '\n**Số việc chạy cùng lúc**',
+      concurrencyNote:
+        '_Cho phép bao nhiêu tiến trình chạy song song (chủ yếu ảnh hưởng nhóm nhiều chủ đề)._',
+      concurrencyRange: '_Mặc định 10, từ 1–50. Quá số này thì xếp hàng chờ._',
+      idleHeading: '\n**Tự dừng khi treo (phút)**',
+      idleNote: '_Tự tắt khi bot im lặng quá lâu, tránh treo vô hạn._',
+      idleRange: '_0 = tắt (mặc định), từ 1–120. Lệnh `/timeout` đè được cho từng phiên._',
+      mentionHeading: '\n**Bắt buộc @ bot trong nhóm**',
+      mentionYesNote:
+        '_Có (mặc định): trong nhóm, tin nhắn không @ bot thì bot bỏ qua — bot không xen vào cuộc trò chuyện._',
+      mentionNoNote: '_Không: mọi tin nhắn đều được gửi cho bot (giống bản 0.1.21 trở về trước)._',
+      mentionAlwaysNote: '_Nhắn riêng thì không bao giờ cần @; `@tất cả` thì bot không bao giờ trả lời._',
+      mentionYes: 'Có (mặc định)',
+      mentionNo: 'Không',
+      identityHeading: '\n**Danh tính lark-cli**',
+      identityBotOnlyNote:
+        '_Chỉ danh tính ứng dụng: dùng quyền của bot, không đụng tài nguyên cá nhân._',
+      identityUserNote:
+        '_Cho phép danh tính người dùng: giữ quyền ứng dụng, đồng thời cho phép truy cập Lịch, Mail, Drive… của người đã cấp quyền._',
+      identityBotOnly: 'Chỉ danh tính ứng dụng',
+      identityUser: 'Cho phép danh tính người dùng',
+      teamOverrideNote:
+        '\n\n_⚠️ Đang bật chế độ Nhóm nên mục này bị ghi đè — danh tính bị ép về “chỉ ứng dụng” và phân quyền không có tác dụng. Chuyển lại Cá nhân thì khôi phục._',
+      accessPanelTitle: '🔒 **Phân quyền** (bấm để mở)',
+      accessTeamNote:
+        '_⚠️ **Đang bật chế độ Nhóm**: phân quyền tạm thời không có tác dụng — ai @ bot cũng dùng được (lệnh quản trị vẫn chỉ dành cho chủ/quản trị viên). Chuyển lại Cá nhân thì danh sách dưới đây có hiệu lực trở lại._',
+      accessNote:
+        '_Ai được dùng bot khi nhắn riêng và trong nhóm. **Để trống = bot không trả lời tin nhắn nào.** Bình luận trong tài liệu thì theo quyền của tài liệu đó._',
+      accessUsersHeading: (n) => `**Người được nhắn riêng** (${n})`,
+      accessUsersHint: '_Thêm / bớt:_ `/invite user @tên`  `/remove user @tên`',
+      accessChatsHeading: (n) => `**Nhóm bot được trả lời** (${n})`,
+      accessChatsAllHint: '_Thêm tất cả nhóm bot đang ở trong:_ `/invite all group`',
+      accessChatsHint: '_Thêm / bớt (gõ ngay trong nhóm đó):_ `/invite group`  `/remove group`',
+      accessAdminsHeading: (n) => `**Quản trị viên** (${n})`,
+      accessAdminsNote:
+        '_Được chạy các lệnh nhạy cảm: `/account` `/config` `/exit` `/reconnect` `/doctor` `/cd` `/ws` `/invite` `/remove`. Quản trị viên cũng tự động được nhắn riêng, và quản lý phân quyền từ nhóm chưa được cho phép._',
+      accessAdminsHint: '_Thêm / bớt:_ `/invite admin @tên`  `/remove admin @tên`',
+      none: '_(chưa có)_',
+      unknownChat: '(nhóm lạ)',
+      empty: '_(trống)_',
+      count: (n) => `${n}`,
+      savedSummary: 'Đã lưu cài đặt',
+      savedTitle: '✅ **Đã lưu cài đặt**',
+      savedLang: '**Ngôn ngữ**',
+      savedMode: '**Chế độ dùng**',
+      savedModel: '**Model**',
+      savedReply: '**Kiểu trả lời**',
+      savedTools: '**Hiện các bước bot làm**',
+      savedCot: '**Tin nhắn tiến trình**',
+      savedConcurrency: '**Số việc chạy cùng lúc**',
+      savedIdle: '**Tự dừng khi treo**',
+      savedMention: '**Bắt buộc @ bot trong nhóm**',
+      savedIdentity: '**Danh tính lark-cli**',
+      savedIdentityTeamForced: 'Chỉ danh tính ứng dụng (chế độ Nhóm ép buộc)',
+      savedAccess: '🔒 **Phân quyền**',
+      savedAccessTeamNote: '(_không tác dụng ở chế độ Nhóm — ai cũng dùng được_)',
+      savedEffective: 'Có hiệu lực từ tin nhắn tiếp theo.',
+      minutes: (n) => `${n} phút`,
+      off: 'tắt',
+      yes: 'có',
+      no: 'không',
+      cancelledSummary: 'Đã huỷ',
+      cancelledBody: 'Đã huỷ — không thay đổi gì.',
+      failedSummary: 'Lưu thất bại',
+      failedBody: (reason) => `Lưu thất bại: ${reason}`,
+      grantSummary: 'Còn thiếu một quyền',
+      grantTitle: '⚠️ **“Không cần @ bot trong nhóm” còn thiếu một quyền**',
+      grantWhy:
+        'Bạn đã bật trả lời không cần @, nhưng ứng dụng này chưa có quyền **Đọc mọi tin nhắn trong nhóm** (`im:message.group_msg`). Thiếu nó thì Lark không đẩy tin nhắn không-@ cho bot, nên cài đặt này chưa có tác dụng.',
+      grantLink: (mins) => `**Bấm link dưới đây để cấp quyền** (có hiệu lực khoảng ${mins} phút):`,
+      grantButton: '🔗 Cấp quyền ngay',
+      grantHow:
+        '_Link mở ra trang xác nhận, quyền mới đã được điền sẵn — bạn chỉ cần bấm xác nhận. Có hiệu lực ngay với tin nhắn mới, không cần khởi động lại._',
+      grantFallback: '_Nếu link không mở được, copy dòng này:_',
+      grantReconnect: '_Cấp quyền xong mà nhóm vẫn chưa nhận tin không-@, gõ `/reconnect` một lần._',
+      grantedSummary: 'Đã cấp quyền',
+      grantedTitle: '✅ **Đã cấp quyền**',
+      grantedBody:
+        'Quyền `im:message.group_msg` đã hoạt động — từ giờ tin nhắn trong nhóm không @ bot cũng được trả lời.',
+      grantedReconnect: '_Nếu vẫn chưa chạy, gõ `/reconnect` một lần._',
     },
   },
   models: {

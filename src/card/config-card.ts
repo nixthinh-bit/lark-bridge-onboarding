@@ -1,5 +1,5 @@
 import { modelLabel, supportedModels } from '../agent/models';
-import type { Lang } from '../i18n';
+import { t, type Lang } from '../i18n';
 import type { KnownChat } from '../bot/lark-info';
 import type { AgentKind, LarkCliIdentityPreset, ProfileMode } from '../config/profile-schema';
 import type { CotMessagesMode, MessageReplyMode } from '../config/schema';
@@ -57,76 +57,75 @@ function collapsedAccessPanel(title: string, elements: object[]): object {
 }
 
 function atMentionLine(openIds: string[]): string {
-  if (openIds.length === 0) return '_（暂无）_';
+  if (openIds.length === 0) return t().cards.config.none;
   return openIds.map((id) => `<at id="${id}"></at>`).join('  ');
 }
 
 function chatList(chatIds: string[], knownChats: KnownChat[]): string {
-  if (chatIds.length === 0) return '_（暂无）_';
+  if (chatIds.length === 0) return t().cards.config.none;
   const nameMap = new Map(knownChats.map((chat) => [chat.id, chat.name]));
   return chatIds
-    .map((id) => `- **${nameMap.get(id) ?? '(未知群)'}**（...${id.slice(-6)}）`)
+    .map((id) => `- **${nameMap.get(id) ?? t().cards.config.unknownChat}**（...${id.slice(-6)}）`)
     .join('\n');
 }
 
 /** Form card for `/config`. */
 export function configFormCard(opts: ConfigFormOpts): object {
   const teamMode = opts.mode === 'team';
-  const teamOverrideNote =
-    '\n\n_⚠️ 团队版已开启：本项被覆盖 —— 身份强制为「只允许应用身份」、访问控制不生效。切回个人版后恢复。_';
+  const m = t().cards.config;
+  const teamOverrideNote = m.teamOverrideNote;
   const accessElements: object[] = [
     ...(teamMode
       ? [
           {
             tag: 'markdown',
             content:
-              '_⚠️ **团队版已开启**：访问控制暂不生效 —— 任何人 @ bot 都能使用（管理命令仍限 owner/管理员）。切回个人版后以下白名单恢复生效。_',
+              m.accessTeamNote,
           },
           { tag: 'hr' },
         ]
       : []),
     {
       tag: 'markdown',
-      content: '_控制谁能通过私聊和群聊使用 bot。**留空 = 不响应聊天消息**。云文档评论按文档权限生效。_',
+      content: m.accessNote,
     },
     { tag: 'hr' },
     {
       tag: 'markdown',
       content:
-        `**允许私聊的用户**（共 ${opts.allowedUsers.length} 人）\n` +
+        `${m.accessUsersHeading(opts.allowedUsers.length)}\n` +
         `${atMentionLine(opts.allowedUsers)}\n\n` +
-        '_加 / 删：_ `/invite user @某人`  `/remove user @某人`',
+        m.accessUsersHint,
     },
     { tag: 'hr' },
     {
       tag: 'markdown',
       content:
-        `**允许响应的群**（共 ${opts.allowedChats.length} 个）\n` +
+        `${m.accessChatsHeading(opts.allowedChats.length)}\n` +
         `${chatList(opts.allowedChats, opts.knownChats)}\n\n` +
-        '_一键加全部 bot 所在的群：_ `/invite all group`\n' +
-        '_加 / 删（在目标群里发）：_ `/invite group`  `/remove group`',
+        `${m.accessChatsAllHint}\n` +
+        m.accessChatsHint,
     },
     { tag: 'hr' },
     {
       tag: 'markdown',
       content:
-        `**管理员**（共 ${opts.admins.length} 人）\n` +
+        `${m.accessAdminsHeading(opts.admins.length)}\n` +
         `${atMentionLine(opts.admins)}\n\n` +
-        '_可以跑敏感命令：`/account` `/config` `/exit` `/reconnect` `/doctor` `/cd` `/ws` `/invite` `/remove`。管理员也自动获得私聊权限，并可在未白名单群里管理访问控制。_\n\n' +
-        '_加 / 删：_ `/invite admin @某人`  `/remove admin @某人`',
+        `${m.accessAdminsNote}\n\n` +
+        m.accessAdminsHint,
     },
   ];
 
   return {
     schema: '2.0',
-    config: { summary: { content: '偏好设置' } },
+    config: { summary: { content: m.summary } },
     body: {
       elements: [
         {
           tag: 'markdown',
           content:
-            '⚙️ **偏好设置**\n\n' +
-            '调整 bot 的行为偏好。改完点提交后写入当前 profile 配置；消息和访问控制设置立即生效。',
+            `${m.title}\n\n${m.intro}`,
         },
         { tag: 'hr' },
         {
@@ -139,10 +138,10 @@ export function configFormCard(opts: ConfigFormOpts): object {
             {
               tag: 'markdown',
               content:
-                '**语言 / Language / Ngôn ngữ**\n' +
-                '_Bot 回复和卡片使用的语言。守护进程没有系统语言环境，所以这里选定后会记住。_\n' +
-                '_The language of cards and replies. Stored here because the daemon has no OS locale._\n' +
-                '_Ngôn ngữ của thẻ và tin nhắn. Lưu ở đây vì tiến trình nền không có ngôn ngữ hệ thống._',
+                m.langHeading +
+                '\n_Bot 回复和卡片使用的语言。守护进程没有系统语言环境，所以这里选定后会记住。_' +
+                '\n_The language of cards and replies. Stored here because the daemon has no OS locale._' +
+                '\n_Ngôn ngữ của thẻ và tin nhắn. Lưu ở đây vì tiến trình nền không có ngôn ngữ hệ thống._',
             },
             {
               tag: 'select_static',
@@ -158,43 +157,37 @@ export function configFormCard(opts: ConfigFormOpts): object {
             {
               tag: 'markdown',
               content:
-                '**运行模式**\n' +
-                '_个人版(默认):Bot 是你一个人的助手,只有你和白名单用户能用,可携带你的个人授权访问文档/日历等_\n' +
-                '_团队版:Bot 是团队共用的助手,任何人 @ 即可使用(不做白名单校验);为避免他人借 Bot 动用你的个人权限,此模式下 CLI 强制只用应用(bot)身份,不使用个人授权_',
+                `${m.modeHeading}\n${m.modePersonalNote}\n${m.modeTeamNote}`,
             },
             {
               tag: 'select_static',
               name: 'deploy_mode',
               initial_option: opts.mode,
               options: [
-                { text: { tag: 'plain_text', content: '个人版(默认)' }, value: 'personal' },
-                { text: { tag: 'plain_text', content: '团队版' }, value: 'team' },
+                { text: { tag: 'plain_text', content: m.modePersonal }, value: 'personal' },
+                { text: { tag: 'plain_text', content: m.modeTeam }, value: 'team' },
               ],
             },
             { tag: 'hr' },
             {
               tag: 'markdown',
               content:
-                '**模型**\n' +
-                '_底层 agent 运行使用的模型_\n' +
-                '_「跟随默认」= 不指定,由 CLI/账号决定_',
+                `${m.modelHeading}\n${m.modelNote}\n${m.modelDefaultNote}`,
             },
             {
               tag: 'select_static',
               name: 'model',
               initial_option: opts.model,
-              options: supportedModels(opts.agentKind).map((m) => ({
-                text: { tag: 'plain_text', content: m.label },
-                value: m.value,
+              options: supportedModels(opts.agentKind).map((model) => ({
+                text: { tag: 'plain_text', content: model.label },
+                value: model.value,
               })),
             },
             { tag: 'hr' },
             {
               tag: 'markdown',
               content:
-                '**消息回复方式**\n' +
-                '_纯文本:agent 跑完一次性发出,不流式,体感最轻_\n' +
-                '_消息卡片:轻量流式 markdown 卡片,飞书原生打字机动画_',
+                `${m.replyHeading}\n${m.replyTextNote}\n${m.replyMarkdownNote}`,
             },
             {
               tag: 'select_static',
@@ -205,50 +198,43 @@ export function configFormCard(opts: ConfigFormOpts): object {
               // overwrites if the user actually picks something.
               initial_option: opts.messageReply === 'card' ? 'markdown' : opts.messageReply,
               options: [
-                { text: { tag: 'plain_text', content: '纯文本' }, value: 'text' },
-                { text: { tag: 'plain_text', content: '消息卡片(默认)' }, value: 'markdown' },
+                { text: { tag: 'plain_text', content: m.replyText }, value: 'text' },
+                { text: { tag: 'plain_text', content: m.replyMarkdown }, value: 'markdown' },
               ],
             },
             {
               tag: 'markdown',
               content:
-                '\n**工具调用显示**\n' +
-                '_显示:可以看到 bot 跑了什么命令、读了哪些文件等过程_\n' +
-                '_隐藏:只看 agent 最终的文字答复,跳过所有工具块_',
+                `${m.toolsHeading}\n${m.toolsShowNote}\n${m.toolsHideNote}`,
             },
             {
               tag: 'select_static',
               name: 'show_tool_calls',
               initial_option: opts.showToolCalls ? 'show' : 'hide',
               options: [
-                { text: { tag: 'plain_text', content: '显示(默认)' }, value: 'show' },
-                { text: { tag: 'plain_text', content: '隐藏' }, value: 'hide' },
+                { text: { tag: 'plain_text', content: m.toolsShow }, value: 'show' },
+                { text: { tag: 'plain_text', content: m.toolsHide }, value: 'hide' },
               ],
             },
             {
               tag: 'markdown',
               content:
-                '\n**COT 过程消息**\n' +
-                '_关闭:只发送最终回复_\n' +
-                '_简略:展示 agent 过程文本和工具摘要_\n' +
-                '_详细:额外展示工具参数和输出摘要_',
+                `${m.cotHeading}\n${m.cotOffNote}\n${m.cotBriefNote}\n${m.cotDetailedNote}`,
             },
             {
               tag: 'select_static',
               name: 'cot_messages',
               initial_option: opts.cotMessages,
               options: [
-                { text: { tag: 'plain_text', content: '关闭' }, value: 'off' },
-                { text: { tag: 'plain_text', content: '简略' }, value: 'brief' },
-                { text: { tag: 'plain_text', content: '详细' }, value: 'detailed' },
+                { text: { tag: 'plain_text', content: m.cotOff }, value: 'off' },
+                { text: { tag: 'plain_text', content: m.cotBrief }, value: 'brief' },
+                { text: { tag: 'plain_text', content: m.cotDetailed }, value: 'detailed' },
               ],
             },
             {
               tag: 'markdown',
               content:
-                '\n**并发上限**\n' +
-                '_全局同时运行的 agent 进程数(主要影响话题群多话题并行场景)_\n' +
-                '_默认 10,范围 1-50。超出的请求会 FIFO 排队_',
+                `${m.concurrencyHeading}\n${m.concurrencyNote}\n${m.concurrencyRange}`,
             },
             {
               tag: 'input',
@@ -260,9 +246,7 @@ export function configFormCard(opts: ConfigFormOpts): object {
             {
               tag: 'markdown',
               content:
-                '\n**run 探活(分钟)**\n' +
-                '_agent 长时间没输出时自动 kill,防止假死_\n' +
-                '_0 = 关闭(默认),范围 1-120。可被 `/timeout` 在单个 scope 覆盖_',
+                `${m.idleHeading}\n${m.idleNote}\n${m.idleRange}`,
             },
             {
               tag: 'input',
@@ -274,26 +258,21 @@ export function configFormCard(opts: ConfigFormOpts): object {
             {
               tag: 'markdown',
               content:
-                '\n**群里需要 @ bot**\n' +
-                '_是(默认):群和话题群里,不 @ bot 的消息不会触发回复,bot 不接群里聊天_\n' +
-                '_否:任何消息都会发给 agent(0.1.21 及更早版本的行为)_\n' +
-                '_私聊永远不需要 @;`@全员` 永远不响应_',
+                `${m.mentionHeading}\n${m.mentionYesNote}\n${m.mentionNoNote}\n${m.mentionAlwaysNote}`,
             },
             {
               tag: 'select_static',
               name: 'require_mention_in_group',
               initial_option: opts.requireMentionInGroup ? 'yes' : 'no',
               options: [
-                { text: { tag: 'plain_text', content: '是(默认)' }, value: 'yes' },
-                { text: { tag: 'plain_text', content: '否' }, value: 'no' },
+                { text: { tag: 'plain_text', content: m.mentionYes }, value: 'yes' },
+                { text: { tag: 'plain_text', content: m.mentionNo }, value: 'no' },
               ],
             },
             {
               tag: 'markdown',
               content:
-                '\n**lark-cli 身份策略**\n' +
-                '_只允许应用身份:使用 bot/app 能力,不访问个人资源_\n' +
-                '_允许用户身份:保留应用身份,并允许已授权用户访问个人日历、邮箱、云盘等资源_' +
+                `${m.identityHeading}\n${m.identityBotOnlyNote}\n${m.identityUserNote}` +
                 (teamMode ? teamOverrideNote : ''),
             },
             {
@@ -301,12 +280,12 @@ export function configFormCard(opts: ConfigFormOpts): object {
               name: 'lark_cli_identity',
               initial_option: opts.larkCliIdentity,
               options: [
-                { text: { tag: 'plain_text', content: '只允许应用身份' }, value: 'bot-only' },
-                { text: { tag: 'plain_text', content: '允许用户身份' }, value: 'user-default' },
+                { text: { tag: 'plain_text', content: m.identityBotOnly }, value: 'bot-only' },
+                { text: { tag: 'plain_text', content: m.identityUser }, value: 'user-default' },
               ],
             },
             { tag: 'hr' },
-            collapsedAccessPanel('🔒 **访问控制**（点击展开）', accessElements),
+            collapsedAccessPanel(m.accessPanelTitle, accessElements),
             {
               tag: 'column_set',
               flex_mode: 'flow',
@@ -319,7 +298,7 @@ export function configFormCard(opts: ConfigFormOpts): object {
                     {
                       tag: 'button',
                       name: 'submit_btn',
-                      text: { tag: 'plain_text', content: '提交' },
+                      text: { tag: 'plain_text', content: m.submit },
                       type: 'primary',
                       form_action_type: 'submit',
                       behaviors: [{ type: 'callback', value: { cmd: 'config.submit' } }],
@@ -333,7 +312,7 @@ export function configFormCard(opts: ConfigFormOpts): object {
                     {
                       tag: 'button',
                       name: 'cancel_btn',
-                      text: { tag: 'plain_text', content: '取消' },
+                      text: { tag: 'plain_text', content: m.cancel },
                       behaviors: [{ type: 'callback', value: { cmd: 'config.cancel' } }],
                     },
                   ],
@@ -348,41 +327,42 @@ export function configFormCard(opts: ConfigFormOpts): object {
 }
 
 export function configSavedCard(opts: ConfigFormOpts): object {
+  const m = t().cards.config;
   const replyLabel =
     opts.messageReply === 'card'
-      ? '交互卡片'
+      ? m.replyCard
       : opts.messageReply === 'markdown'
-        ? '消息卡片'
-        : '纯文本';
+        ? m.replyMarkdown
+        : m.replyText;
   const summarize = (list: string[]): string =>
-    list.length === 0 ? '_(空)_' : `${list.length} 项`;
+    list.length === 0 ? m.empty : m.count(list.length);
   const cotLabel = cotMessagesLabel(opts.cotMessages);
   return {
     schema: '2.0',
-    config: { summary: { content: '偏好已保存' } },
+    config: { summary: { content: m.savedSummary } },
     body: {
       elements: [
         {
           tag: 'markdown',
           content:
-            '✅ **偏好已保存**\n\n' +
-            `**语言 / Language**:\`${LANG_LABEL[opts.lang]}\`\n` +
-            `**运行模式**:\`${opts.mode === 'team' ? '团队版' : '个人版'}\`\n` +
-            `**模型**:\`${modelLabel(opts.agentKind, opts.model)}\`\n` +
-            `**消息回复方式**:${replyLabel}\n` +
-            `**工具调用显示**:\`${opts.showToolCalls ? 'show' : 'hide'}\`\n` +
-            `**COT 过程消息**:\`${cotLabel}\`\n` +
-            `**并发上限**:\`${opts.maxConcurrentRuns}\`\n` +
-            `**run 探活**:\`${opts.runIdleTimeoutMinutes > 0 ? `${opts.runIdleTimeoutMinutes} 分钟` : '关闭'}\`\n` +
-            `**群里需要 @ bot**:\`${opts.requireMentionInGroup ? '是' : '否'}\`\n\n` +
-            `**lark-cli 身份策略**:\`${opts.mode === 'team' ? '只允许应用身份(团队版强制)' : opts.larkCliIdentity === 'user-default' ? '允许用户身份' : '只允许应用身份'}\`\n\n` +
-            '🔒 **访问控制**' +
-            (opts.mode === 'team' ? '（_团队版下不生效,任何人可用_）' : '') +
+            `${m.savedTitle}\n\n` +
+            `${m.savedLang}:\`${LANG_LABEL[opts.lang]}\`\n` +
+            `${m.savedMode}:\`${opts.mode === 'team' ? m.modeTeam : m.modePersonal}\`\n` +
+            `${m.savedModel}:\`${modelLabel(opts.agentKind, opts.model)}\`\n` +
+            `${m.savedReply}:${replyLabel}\n` +
+            `${m.savedTools}:\`${opts.showToolCalls ? 'show' : 'hide'}\`\n` +
+            `${m.savedCot}:\`${cotLabel}\`\n` +
+            `${m.savedConcurrency}:\`${opts.maxConcurrentRuns}\`\n` +
+            `${m.savedIdle}:\`${opts.runIdleTimeoutMinutes > 0 ? m.minutes(opts.runIdleTimeoutMinutes) : m.off}\`\n` +
+            `${m.savedMention}:\`${opts.requireMentionInGroup ? m.yes : m.no}\`\n\n` +
+            `${m.savedIdentity}:\`${opts.mode === 'team' ? m.savedIdentityTeamForced : opts.larkCliIdentity === 'user-default' ? m.identityUser : m.identityBotOnly}\`\n\n` +
+            m.savedAccess +
+            (opts.mode === 'team' ? m.savedAccessTeamNote : '') +
             '\n' +
-            `**允许私聊的用户**:${summarize(opts.allowedUsers)}\n` +
-            `**允许响应的群**:${summarize(opts.allowedChats)}\n` +
-            `**管理员**:${summarize(opts.admins)}\n\n` +
-            '下条消息开始生效。',
+            `${m.accessUsersHeading(opts.allowedUsers.length)}:${summarize(opts.allowedUsers)}\n` +
+            `${m.accessChatsHeading(opts.allowedChats.length)}:${summarize(opts.allowedChats)}\n` +
+            `${m.accessAdminsHeading(opts.admins.length)}:${summarize(opts.admins)}\n\n` +
+            m.savedEffective,
         },
       ],
     },
@@ -390,9 +370,9 @@ export function configSavedCard(opts: ConfigFormOpts): object {
 }
 
 function cotMessagesLabel(value: CotMessagesMode): string {
-  if (value === 'brief') return '简略';
-  if (value === 'detailed') return '详细';
-  return '关闭';
+  if (value === 'brief') return t().cards.config.cotBrief;
+  if (value === 'detailed') return t().cards.config.cotDetailed;
+  return t().cards.config.cotOff;
 }
 
 /**
@@ -401,22 +381,22 @@ function cotMessagesLabel(value: CotMessagesMode): string {
  * authorization via the link from `requestScopeGrantLink`.
  */
 export function groupMsgScopeGrantCard(url: string, expireMins: number): object {
+  const m = t().cards.config;
   return {
     schema: '2.0',
-    config: { summary: { content: '需要补授权' } },
+    config: { summary: { content: m.grantSummary } },
     body: {
       elements: [
         {
           tag: 'markdown',
           content:
-            '⚠️ **「群里不需要 @ bot」还差一个权限**\n\n' +
-            '你已开启「不 @ bot 也回复」，但当前应用没有 **获取群组中所有消息**（`im:message.group_msg`）权限。' +
-            '没有它，飞书不会把群里非 @ 的消息推给 bot，所以这个设置暂时不生效。\n\n' +
-            `**点下面的链接补授权**（约 ${expireMins} 分钟内有效）：\n` +
-            `[🔗 点此一键授权](${url})\n\n` +
-            '_扫码/点击后会进入确认页，新权限已预填好，确认即可。授权成功后，群里新消息开始自动生效，无需重启。_\n' +
-            `_若链接打不开，可复制：_\n\`${url}\`\n\n` +
-            '_授权后若群里仍收不到非 @ 消息，发 `/reconnect` 重连一次即可。_',
+            `${m.grantTitle}\n\n` +
+            `${m.grantWhy}\n\n` +
+            `${m.grantLink(expireMins)}\n` +
+            `[${m.grantButton}](${url})\n\n` +
+            `${m.grantHow}\n` +
+            `${m.grantFallback}\n\`${url}\`\n\n` +
+            m.grantReconnect,
         },
       ],
     },
@@ -425,17 +405,18 @@ export function groupMsgScopeGrantCard(url: string, expireMins: number): object 
 
 /** Replaces {@link groupMsgScopeGrantCard} in place once authorization completes. */
 export function groupMsgScopeGrantedCard(): object {
+  const m = t().cards.config;
   return {
     schema: '2.0',
-    config: { summary: { content: '授权成功' } },
+    config: { summary: { content: m.grantedSummary } },
     body: {
       elements: [
         {
           tag: 'markdown',
           content:
-            '✅ **授权成功**\n\n' +
-            '`im:message.group_msg` 权限已生效，群里非 @ bot 的消息从现在开始会触发回复。\n\n' +
-            '_若仍未生效，发 `/reconnect` 重连一次。_',
+            `${m.grantedTitle}\n\n` +
+            `${m.grantedBody}\n\n` +
+            m.grantedReconnect,
         },
       ],
     },
@@ -443,21 +424,23 @@ export function groupMsgScopeGrantedCard(): object {
 }
 
 export function configCancelledCard(): object {
+  const m = t().cards.config;
   return {
     schema: '2.0',
-    config: { summary: { content: '已取消' } },
+    config: { summary: { content: m.cancelledSummary } },
     body: {
-      elements: [{ tag: 'markdown', content: '已取消,未做任何修改。' }],
+      elements: [{ tag: 'markdown', content: m.cancelledBody }],
     },
   };
 }
 
 export function configFailedCard(reason: string): object {
+  const m = t().cards.config;
   return {
     schema: '2.0',
-    config: { summary: { content: '保存失败' } },
+    config: { summary: { content: m.failedSummary } },
     body: {
-      elements: [{ tag: 'markdown', content: `保存失败：${reason}` }],
+      elements: [{ tag: 'markdown', content: m.failedBody(reason) }],
     },
   };
 }
