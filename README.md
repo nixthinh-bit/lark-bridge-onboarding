@@ -12,6 +12,111 @@ A lightweight bot that bridges Feishu / Lark messenger with your local Claude Co
 
 For a product walkthrough, see the [Feishu document](https://larkcommunity.feishu.cn/docx/OaRIdFIRFoLM3xxTmKwcetHqn5e).
 
+---
+
+# Start here
+
+*New to this? Read these seven points first — they answer the questions people actually get stuck on. Everything below this section is upstream's reference documentation.*
+
+**🇻🇳 Người Việt: [đọc bản tiếng Việt đầy đủ tại đây](./README.vi.md).**
+
+### 1. How is this different from `lark-cli`?
+
+If you have used `lark-cli`, this is the easiest thing to confuse. They point in **opposite directions**:
+
+| | **lark-cli** | **Bridge** (this project) |
+|---|---|---|
+| Where you sit | **At your computer**, typing in a terminal | **In Lark** — your phone works too |
+| What Lark is | **The thing being worked on** — Claude reaches *out* to edit Docs, Bases, send messages | **A remote keyboard** — Lark pushes commands *in* to your machine |
+| What your computer is | Where you happen to be sitting | **Where Claude runs — it must stay on** |
+
+> **lark-cli** lets Claude *work on Lark*.
+> **Bridge** lets you *drive Claude from Lark*.
+
+They are separate Lark apps, so installing one does not affect the other. Used together they compound: message from your phone → the bridge wakes Claude at home → Claude uses lark-cli to edit your Base.
+
+### 2. ⚠️ Your computer must stay on
+
+**The bot only answers while your computer is awake.**
+
+This is a deliberate design choice, not a limitation to work around: the bridge is **not a cloud service**. Your code and files never leave your machine, it uses your own Claude account, and your data stays local. The price is that the machine has to be alive.
+
+- **Computer off** → the bot is dead.
+- **Asleep, or laptop lid closed** → also dead. This is the one that surprises people.
+- **Network drops** → temporarily out; the bridge reconnects on its own.
+
+Messages sent while the machine is off are **not processed later** — you have to resend them.
+
+### 3. What you need first
+
+| | Required? | If missing |
+|---|---|---|
+| **Node.js ≥ 20.12** | ✅ Required | Won't install |
+| **Claude Code (`claude`)** | ✅ **Required** | **The bot won't run** — this is the brain |
+| **lark-cli** | ⚠️ Recommended | The bot runs, but **can't touch Lark** (no cards, no Doc/Base access) |
+
+The bridge does not think for itself — it drives the `claude` **already installed on your machine**. Check with `claude --version`; if that fails:
+
+```bash
+npm i -g @anthropic-ai/claude-code
+claude auth login
+```
+
+> Installing the **Claude desktop app is not enough** — it does not ship the `claude` command.
+
+The bridge can auto-install lark-cli, **but only in interactive mode**. Start it as a background service first and it silently skips that step, leaving you wondering why the bot can't reach Lark. Installing lark-cli up front avoids the trap entirely: **[lark-cli-onboarding](https://github.com/nixthinh-bit/lark-cli-onboarding)**.
+
+### 4. Install
+
+```bash
+npm i -g github:nixthinh-bit/lark-bridge-onboarding
+```
+
+> ⚠️ **Already have upstream installed?** This **replaces** it — both share the `lark-channel-bridge` command name. It is a drop-in replacement, so every upstream command still works. To go back: `npm i -g lark-channel-bridge`.
+
+### 5. First run — just scan the QR code
+
+```bash
+lark-channel-bridge run
+```
+
+**You do not need to open a developer console, create an app by hand, or copy an App ID or App Secret.** The wizard does all of it:
+
+1. A **QR code** appears in your terminal.
+2. Scan it with the **Lark app on your phone**.
+3. The Lark app is **created automatically**, with permissions pre-filled.
+4. Done — config is written to `~/.lark-channel/config.json`.
+
+Whoever scans the QR becomes the app owner, so you can message the bot immediately.
+
+Use `--lang vi` (or `en`, `zh`) to override the language detected from your OS locale.
+
+> **On international Lark?** The wizard detects it and switches to `larksuite.com` on its own.
+> **App creation blocked?** Some organizations require admin approval — ask your Lark admin.
+
+### 6. Pick a model — and protect your 5-hour window
+
+Message `/config` to the bot; the card has a model picker.
+
+The bridge **spends no tokens of its own**, but every message you send is **a real Claude Code turn** on your machine:
+
+- `claude` logged in with a **subscription (Pro/Max)** → each message **counts against the same 5-hour window** as terminal use. There is no separate quota.
+- `claude` logged in with an **API key** → billed per token, with **no** 5-hour window.
+
+⚠️ Firing off requests from your phone is easy, so the window burns faster than you'd expect. Drop to Haiku for light work; save Opus for what needs it.
+
+### 7. 🔒 Tighten access before you use it
+
+Only you — the person who scanned the QR — can use the bot by default. But:
+
+> **Don't run `/invite group`** unless you mean it. Allowing a group lets **every member of that group** drive Claude on your machine — reading files, editing them, running commands.
+
+Prefer `/invite user @name`. And consider lowering the permission mode from the `full` default to `workspace` or `read-only` — see [Permission modes](#permission-modes) below.
+
+---
+
+*The rest of this file is upstream's reference documentation.*
+
 ## What it does
 
 - Forwards Feishu / Lark messages to local Claude Code or Codex CLI. Send a DM directly, or `@bot` in a group.
