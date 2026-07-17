@@ -8,14 +8,18 @@
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
+  "contributors": [
+    "Lark Channel Bridge contributors (original work: https://github.com/zarazhangrui/lark-coding-agent-bridge)",
+    "nixthinh-bit (onboarding, installer, and i18n additions)"
+  ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zarazhangrui/feishu-claude-code-bridge.git"
+    "url": "git+https://github.com/nixthinh-bit/lark-bridge-onboarding.git"
   },
   "bugs": {
-    "url": "https://github.com/zarazhangrui/feishu-claude-code-bridge/issues"
+    "url": "https://github.com/nixthinh-bit/lark-bridge-onboarding/issues"
   },
-  "homepage": "https://github.com/zarazhangrui/feishu-claude-code-bridge#readme",
+  "homepage": "https://github.com/nixthinh-bit/lark-bridge-onboarding#readme",
   "bin": {
     "lark-channel-bridge": "./bin/lark-channel-bridge.mjs"
   },

@@ -1,6 +1,15 @@
 MIT License
 
 Copyright (c) 2026 Lark Channel Bridge contributors
+Copyright (c) 2026 nixthinh-bit (onboarding, installer, and i18n additions)
+
+This project is a fork of:
+  https://github.com/zarazhangrui/lark-coding-agent-bridge
+
+The original work is copyright its contributors and is licensed under the same
+MIT terms; the original copyright notice is retained above, unmodified. All
+changes in this fork are additions layered on top of that work and are offered
+under the same license.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

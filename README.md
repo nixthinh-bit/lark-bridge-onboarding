@@ -1,8 +1,14 @@
-# lark-channel-bridge
+# lark-bridge-onboarding
+
+> **A fork of [zarazhangrui/lark-coding-agent-bridge](https://github.com/zarazhangrui/lark-coding-agent-bridge).** All credit for the bridge itself belongs to the original project and its contributors — the engine is their work, not mine.
+>
+> This fork adds one layer on top: onboarding for people who don't write code. A single install command, a bilingual (English / Tiếng Việt) walkthrough, translated wizard prompts, and plain-language model presets.
+>
+> **If you are comfortable in a terminal, use [the upstream project](https://github.com/zarazhangrui/lark-coding-agent-bridge) directly — you do not need this fork.**
 
 A lightweight bot that bridges Feishu / Lark messenger with your local Claude Code or Codex CLI. Run one command, scan a QR code to bind a PersonalAgent app, and talk to your local coding agent from chat.
 
-[中文 README](./README.zh.md)
+[中文 README](./README.zh.md) · [README Tiếng Việt](./README.vi.md)
 
 For a product walkthrough, see the [Feishu document](https://larkcommunity.feishu.cn/docx/OaRIdFIRFoLM3xxTmKwcetHqn5e).
 
@@ -349,8 +355,29 @@ export default createAdapter;
 
 A missing module, a bad factory, or a throwing adapter all degrade to noop — telemetry can never stop the bridge from starting or break logging.
 
+## Credits
+
+This project would not exist without **[zarazhangrui/lark-coding-agent-bridge](https://github.com/zarazhangrui/lark-coding-agent-bridge)**, published under the MIT License by the Lark Channel Bridge contributors.
+
+Everything that makes this work — the Lark WebSocket channel, the streaming card renderer, the Claude Code and Codex adapters, the QR registration wizard, sessions, and access control — is upstream's work. This fork contributes only the onboarding layer around it:
+
+| Layer | Author |
+|---|---|
+| Bridge engine — channel, adapters, cards, sessions, access control, QR wizard | **Upstream**: [zarazhangrui/lark-coding-agent-bridge](https://github.com/zarazhangrui/lark-coding-agent-bridge) |
+| One-command installer, bilingual EN/VI docs, wizard i18n, plain-language model presets | This fork |
+
+The full upstream commit history is preserved in this repository, so `git log` and `git blame` continue to attribute every line of the engine to the people who wrote it.
+
+Fixes that are not specific to onboarding are sent upstream as pull requests rather than kept here, so the original project benefits too.
+
+**Report bugs in the bridge itself to [upstream's issue tracker](https://github.com/zarazhangrui/lark-coding-agent-bridge/issues)** — not here. Open an issue in this repo only for the installer, the translations, or the docs.
+
 ## License
 
-[MIT](./LICENSE)
+[MIT](./LICENSE) — same as upstream. The original copyright notice is retained in full; this fork's additions are offered under the same terms.
 
-<img src="./assets/feedback-group-qr.png" alt="Feedback group QR code" width="360">
+---
+
+<sub>The QR code below joins **the upstream project's** feedback group (in Chinese), maintained by the original authors — not by this fork.</sub>
+
+<img src="./assets/feedback-group-qr.png" alt="Upstream project feedback group QR code" width="360">
