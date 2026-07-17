@@ -68,15 +68,23 @@ vi() { [ "$LANG_SEL" = "vi" ]; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
 # `curl … | bash` leaves stdin pointing at the script, so prompts must read the
-# terminal directly. With no terminal (CI, a pipe), we can't ask — say what we
-# would have asked and let the caller decide.
+# terminal directly. Open /dev/tty rather than testing it: it can exist and be
+# readable while still failing to open ("Device not configured") when there is
+# no controlling terminal, and the failed redirect would spill a shell error
+# over the output. With no terminal (CI, a pipe) we simply can't ask — answer
+# no, and let the caller print instructions instead.
 ask_yes() {
   local prompt="$1" reply
-  if [ ! -t 0 ] && [ ! -r /dev/tty ]; then
+  # The braces matter: `exec 3<>/dev/tty 2>/dev/null` applies the redirections
+  # left to right, so the tty error is printed before 2>/dev/null takes effect.
+  # Grouping puts the suppression in place first.
+  { exec 3<>/dev/tty; } 2>/dev/null || return 1
+  printf '  %s [Y/n]: ' "$prompt" >&3
+  if ! read -r reply <&3; then
+    exec 3>&- 3<&-
     return 1
   fi
-  printf '  %s [Y/n]: ' "$prompt" > /dev/tty
-  read -r reply < /dev/tty || return 1
+  exec 3>&- 3<&-
   case "$reply" in
     [nN]*) return 1 ;;
     *)     return 0 ;;
