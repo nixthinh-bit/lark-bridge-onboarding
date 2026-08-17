@@ -23,8 +23,11 @@ const notFound = (agentName: string): AgentPreflightError =>
   });
 
 describe('detectLang', () => {
-  it('defaults to Chinese so upstream behaviour is unchanged when nothing is set', () => {
-    expect(detectLang({})).toBe('zh');
+  it('defaults to English when the environment says nothing', () => {
+    // An empty locale is normal under launchd / systemd / SSH / CI. Upstream
+    // lands there in Chinese; this fork ships to an international audience, so
+    // the no-signal case has to read as English.
+    expect(detectLang({})).toBe('en');
   });
 
   it('reads the POSIX locale environment', () => {
@@ -44,7 +47,7 @@ describe('detectLang', () => {
 
   it('falls through unrecognised values instead of throwing', () => {
     // A stray or unsupported locale must never stop the bridge from starting.
-    expect(detectLang({ LANG: 'fr_FR.UTF-8' })).toBe('zh');
+    expect(detectLang({ LANG: 'fr_FR.UTF-8' })).toBe('en');
     expect(detectLang({ LARK_CHANNEL_LANG: 'klingon', LANG: 'vi_VN' })).toBe('vi');
   });
 
@@ -73,7 +76,7 @@ describe('profile language', () => {
     // launchd/systemd start the daemon with no locale at all, so without this
     // every card would render in the default language regardless of /config.
     initLangFromEnv({});
-    expect(getLang()).toBe('zh');
+    expect(getLang()).toBe('en');
 
     applyProfileLang('vi');
     expect(getLang()).toBe('vi');
@@ -119,6 +122,7 @@ describe('model picker', () => {
 
   it('reproduces upstream wording verbatim on the default pack', () => {
     // This fork adds languages; it does not reword the original.
+    setLang('zh');
     const labels = new Map(supportedModels('claude').map((m) => [m.value, m.label]));
     expect(labels.get('claude-opus-4-8')).toBe('Opus 4.8（最新）');
     expect(labels.get('default')).toBe('跟随默认（不指定）');

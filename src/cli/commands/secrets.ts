@@ -3,6 +3,7 @@ import { getSecret, listSecretIds, removeSecret, setSecret } from '../../config/
 import { paths } from '../../config/paths';
 import { loadRootConfig, readActiveProfile } from '../../config/profile-store';
 import { secretKeyForApp } from '../../config/schema';
+import { t } from '../../i18n';
 import { listAllProfiles } from '../../runtime/profile-discovery';
 import { promptPassword } from '../prompt';
 
@@ -85,13 +86,15 @@ export async function runSecretsSet(
   appId: string | undefined,
   opts: SecretProfileOptions = {},
 ): Promise<void> {
+  const m = t().bootstrap;
   if (!appId) {
-    console.error('用法: lark-channel-bridge secrets set --app-id <id>');
+    console.error(m.secretsSetUsage);
     process.exit(1);
   }
-  const plaintext = await promptPassword(`输入 ${appId} 的 App Secret: `);
+  console.log(m.appSecretHidden);
+  const plaintext = await promptPassword(m.appSecretPrompt(appId));
   if (!plaintext) {
-    console.error('✗ 取消(secret 为空)');
+    console.error(m.secretsSetEmpty);
     process.exit(1);
   }
   await setAppSecret(appId, plaintext, opts);

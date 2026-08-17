@@ -1,7 +1,7 @@
 import { mkdir, readFile, realpath } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import * as p from '@clack/prompts';
-import { runRegistrationWizard } from '../bot/wizard';
+import { DEFAULT_TENANT, runRegistrationWizard } from '../bot/wizard';
 import { detectInstalledAgents, type DetectedAgent } from '../cli/agent-detection';
 import { t } from '../i18n';
 import {
@@ -434,7 +434,7 @@ async function resolveBootstrapAppConfig(opts: ResolveProfileRuntimeOptions): Pr
         t().bootstrap.noConfigNonInteractive,
       );
     }
-    return runRegistrationWizard();
+    return runRegistrationWizard(tenantBrandFromString(opts.tenant));
   }
   let appSecret = opts.appSecret;
   if (!appSecret) {
@@ -443,6 +443,9 @@ async function resolveBootstrapAppConfig(opts: ResolveProfileRuntimeOptions): Pr
         t().bootstrap.missingSecretNonInteractive(opts.appId),
       );
     }
+    // Say the input is invisible before muting it — a silent prompt reads as
+    // a hung process to anyone who hasn't met one before.
+    console.log(t().bootstrap.appSecretHidden);
     appSecret = await promptPassword(t().bootstrap.appSecretPrompt(opts.appId));
   }
   if (!appSecret) throw new Error('app secret is required');
@@ -472,7 +475,8 @@ function isInteractiveTerminal(): boolean {
 }
 
 function tenantBrandFromString(value: string | undefined): TenantBrand {
-  if (value === undefined) return 'feishu';
+  // Unset means Lark international in this fork (upstream assumed Feishu).
+  if (value === undefined) return DEFAULT_TENANT;
   if (value === 'feishu' || value === 'lark') return value;
   throw new Error(`unsupported tenant: ${value}`);
 }

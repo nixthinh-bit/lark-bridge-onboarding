@@ -3,6 +3,27 @@ import qrcode from 'qrcode-terminal';
 import type { AppConfig, TenantBrand } from '../config/schema';
 import { t } from '../i18n';
 
+/**
+ * Auth host the QR / authorization link is minted on, per tenant.
+ *
+ * The SDK defaults to the Feishu host and only switches to Lark *after* a
+ * successful scan (the poll reports `tenant_brand: 'lark'`) — which is one
+ * step too late for an international user: what they see first is a Chinese
+ * Feishu console page they cannot sign in to. This fork therefore picks the
+ * host up front, and defaults to Lark.
+ */
+const AUTH_DOMAIN: Record<TenantBrand, string> = {
+  lark: 'accounts.larksuite.com',
+  feishu: 'accounts.feishu.cn',
+};
+
+/**
+ * Tenant assumed when nobody said otherwise. Upstream assumes `feishu`; this
+ * fork exists for international Lark users, so it assumes `lark` and lets
+ * `--tenant feishu` opt back in.
+ */
+export const DEFAULT_TENANT: TenantBrand = 'lark';
+
 export interface ScopeGrantLink {
   /** Authorization URL — opening it lands on the confirm page with the new
    * scopes pre-filled as a diff against the existing app. */
@@ -23,14 +44,17 @@ export interface ScopeGrantLink {
  * The returned `completion` promise resolves only after the user authorizes,
  * so callers can `void`-await it to send a follow-up confirmation.
  *
- * Domain is intentionally left unset — `registerApp` defaults to the Feishu
- * auth host and auto-switches to Lark for international tenants (same as
- * {@link runRegistrationWizard}), so callers don't pass a tenant.
+ * The link is minted on the caller's own tenant host ({@link AUTH_DOMAIN}) —
+ * the app already exists here, so its brand is known and there is nothing to
+ * auto-detect. Sending a Lark tenant to the Feishu host would hand them a
+ * console they cannot sign in to.
  */
 export async function requestScopeGrantLink(opts: {
   appId: string;
   /** App-identity (tenant) scopes to request, e.g. `['im:message.group_msg']`. */
   tenantScopes: string[];
+  /** Brand the app lives on. Defaults to {@link DEFAULT_TENANT}. */
+  tenant?: TenantBrand;
   signal?: AbortSignal;
 }): Promise<ScopeGrantLink> {
   return new Promise<ScopeGrantLink>((resolve, reject) => {
@@ -39,6 +63,7 @@ export async function requestScopeGrantLink(opts: {
     // `completion` is assigned before the callback can reference it.
     const completion = registerApp({
       source: 'lark-channel-bridge',
+      domain: AUTH_DOMAIN[opts.tenant ?? DEFAULT_TENANT],
       appId: opts.appId,
       addons: { scopes: { tenant: opts.tenantScopes } },
       ...(opts.signal ? { signal: opts.signal } : {}),
@@ -55,12 +80,26 @@ export async function requestScopeGrantLink(opts: {
   });
 }
 
-export async function runRegistrationWizard(): Promise<AppConfig> {
+/**
+ * First-run QR flow: create the Lark app by scanning, no developer console.
+ *
+ * @param tenant Brand to create the app on. Defaults to {@link DEFAULT_TENANT}
+ *   (Lark international); pass `feishu` for a China tenant.
+ */
+export async function runRegistrationWizard(
+  tenant: TenantBrand = DEFAULT_TENANT,
+): Promise<AppConfig> {
   const m = t().wizard;
   console.log(`\n${m.noAppConfig}\n`);
+  // Say which brand this QR belongs to before it renders. Scanning with the
+  // wrong app is the single most common first-run failure, and the QR itself
+  // gives no clue which console it leads to.
+  console.log(tenant === 'feishu' ? m.tenantFeishu : m.tenantLark);
+  if (tenant !== 'feishu') console.log(`${m.switchToFeishuHint}\n`);
 
   const result = await registerApp({
     source: 'lark-channel-bridge',
+    domain: AUTH_DOMAIN[tenant],
     onQRCodeReady: (info) => {
       console.log(`${m.scanPrompt}\n`);
       qrcode.generate(info.url, { small: true });
@@ -77,12 +116,15 @@ export async function runRegistrationWizard(): Promise<AppConfig> {
     },
   });
 
-  const tenant: TenantBrand = result.user_info?.tenant_brand ?? 'feishu';
+  // What the scan reports wins — the SDK may have switched hosts mid-flow.
+  // Falling back to the requested brand (not a hardcoded `feishu`) keeps a
+  // missing `user_info` from writing the wrong host into the config.
+  const resolvedTenant: TenantBrand = result.user_info?.tenant_brand ?? tenant;
   const operatorOpenId = result.user_info?.open_id;
 
   console.log(`\n${m.appCreated}`);
   console.log(`  App ID:  ${result.client_id}`);
-  console.log(`  Tenant:  ${tenant}`);
+  console.log(`  Tenant:  ${resolvedTenant}`);
   console.log(operatorOpenId ? m.creator(operatorOpenId) : m.creatorUnresolved);
 
   // No access fields are seeded here. The bot creator is resolved at
@@ -97,7 +139,7 @@ export async function runRegistrationWizard(): Promise<AppConfig> {
       app: {
         id: result.client_id,
         secret: result.client_secret,
-        tenant,
+        tenant: resolvedTenant,
       },
     },
   };

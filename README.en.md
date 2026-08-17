@@ -109,7 +109,9 @@ Whoever scans the QR becomes the app owner, so you can message the bot immediate
 
 Use `--lang vi` (or `en`, `zh`) to override the language detected from your OS locale.
 
-> **On international Lark?** The wizard detects it and switches to `larksuite.com` on its own.
+> **The QR code goes to Lark international (`larksuite.com`).** That is this fork's default, and the terminal says so before the code renders.
+> On **Feishu (China)**? Run `lark-channel-bridge run --tenant feishu` instead.
+>
 > **App creation blocked?** Some organizations require admin approval — ask your Lark admin.
 
 ### 6. Pick a model — and protect your 5-hour window
@@ -156,11 +158,9 @@ Prefer `/invite user @name`. And consider lowering the permission mode from the 
 
 ## Install
 
-```bash
-npm i -g lark-channel-bridge
-# or
-pnpm add -g lark-channel-bridge
-```
+Use the one-line installer in [step 4](#4-install--one-command) above.
+
+`npm i -g lark-channel-bridge` installs **upstream**, not this fork: the interface there is Chinese only and the QR code points at Feishu China. That is the right choice if you want upstream — but it is not this project.
 
 ## First run
 
@@ -178,7 +178,7 @@ The first run opens a QR-code wizard:
 
 You do not need to choose a project directory up front. The bridge creates a profile-managed default working directory; after startup, send `/cd <path>` in Feishu / Lark to switch to a real project.
 
-If you already have a PersonalAgent app, pass `--app-id` during initialization to skip app creation. The command prompts for the App Secret.
+If you already have a PersonalAgent app, pass `--app-id` during initialization to skip app creation. The command then prompts for the App Secret — the prompt echoes nothing, so paste it and press Enter.
 
 ```bash
 lark-channel-bridge run --app-id cli_xxx
@@ -186,7 +186,7 @@ lark-channel-bridge run --app-id cli_xxx
 lark-channel-bridge start --app-id cli_xxx
 ```
 
-For Lark global apps, add `--tenant lark`.
+Both the QR wizard and `--app-id` assume **Lark international**. For a Feishu (China) tenant, add `--tenant feishu`.
 
 ## Background service
 

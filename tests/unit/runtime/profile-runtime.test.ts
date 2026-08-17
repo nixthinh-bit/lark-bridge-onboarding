@@ -39,6 +39,7 @@ const auth = vi.hoisted(() => {
 
 vi.mock('../../../src/bot/wizard', () => ({
   runRegistrationWizard: vi.fn(async () => wizard.next),
+  DEFAULT_TENANT: 'lark',
 }));
 
 vi.mock('../../../src/utils/feishu-auth', () => ({

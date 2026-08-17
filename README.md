@@ -131,7 +131,9 @@ Muốn giao diện tiếng Việt (nếu máy bạn đang để tiếng Anh):
 lark-channel-bridge --lang vi run
 ```
 
-> **Dùng Lark bản quốc tế?** Trình hướng dẫn tự nhận ra và chuyển sang `larksuite.com`, bạn không phải làm gì.
+> **Mã QR mặc định trỏ về Lark bản quốc tế (`larksuite.com`).** Terminal cũng in rõ dòng này ngay trước khi hiện mã, nên bạn biết mình đang quét vào đâu.
+>
+> Nếu bạn dùng **Feishu (Trung Quốc)**, chạy `lark-channel-bridge run --tenant feishu`.
 >
 > **Công ty bạn chặn tạo ứng dụng?** Một số tổ chức bắt quản trị viên duyệt trước. Nếu bị từ chối, hãy nhờ admin Lark của công ty.
 

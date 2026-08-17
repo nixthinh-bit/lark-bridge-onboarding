@@ -2034,7 +2034,12 @@ async function promptGroupMsgScopeIfMissing(ctx: CommandContext): Promise<void> 
 
   let link;
   try {
-    link = await requestScopeGrantLink({ appId, tenantScopes: [GROUP_MSG_SCOPE] });
+    link = await requestScopeGrantLink({
+      appId,
+      tenantScopes: [GROUP_MSG_SCOPE],
+      // Mint the link on the brand this app actually lives on.
+      tenant: ctx.controls.cfg.accounts.app.tenant,
+    });
   } catch (err) {
     log.warn('command', 'scope-grant-link-failed', { err: String(err) });
     return;

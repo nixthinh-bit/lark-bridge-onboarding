@@ -4,6 +4,10 @@
 >
 > 本 fork 只在其上增加一层：面向不写代码用户的上手引导（一条命令安装、英文 / 越南语双语说明、向导文案翻译、通俗的模型预设）。
 >
+> **⚠️ 两处默认值与上游不同**（本 fork 面向国际版 Lark 用户）：
+> 1. 扫码向导默认在 **Lark 国际版（larksuite.com）** 创建应用；飞书（中国版）请加 `--tenant feishu`。
+> 2. 系统语言检测不到时界面回退到**英文**（上游回退到中文）；想固定中文用 `--lang zh` 或 `LARK_CHANNEL_LANG=zh`。
+>
 > **如果你能熟练使用终端，请直接使用[上游项目](https://github.com/zarazhangrui/lark-coding-agent-bridge)，无需本 fork。**
 
 把飞书 / Lark 消息和本地 Claude Code 或 Codex CLI 打通的轻量 bot。用一条命令启动，扫码绑定 PersonalAgent 应用，然后在飞书里和本机编程助手对话，让它读图、处理文件、改代码。

@@ -12,6 +12,11 @@
 export interface Messages {
   wizard: {
     noAppConfig: string;
+    /** Which brand's console this QR leads to — printed before the code. */
+    tenantLark: string;
+    tenantFeishu: string;
+    /** How to opt back into the China tenant; shown only on the Lark default. */
+    switchToFeishuHint: string;
     scanPrompt: string;
     qrExpiry: (minutes: number) => string;
     openInBrowser: (url: string) => string;
@@ -361,6 +366,14 @@ export interface Messages {
     noConfigNonInteractive: string;
     missingSecretNonInteractive: (appId: string) => string;
     appSecretPrompt: (appId: string) => string;
+    /**
+     * Warning that the secret prompt echoes nothing. Without it a pasted
+     * secret looks like a frozen terminal, and people kill the process.
+     */
+    appSecretHidden: string;
+    /** Usage line for `secrets set` when --app-id is missing. */
+    secretsSetUsage: string;
+    secretsSetEmpty: string;
     credentialsOk: string;
     credentialsOkNamed: (botName: string) => string;
     multipleAgentsNonInteractive: string;
@@ -402,6 +415,10 @@ export interface Messages {
 export const zh: Messages = {
   wizard: {
     noAppConfig: '未检测到飞书应用配置，进入扫码创建向导。',
+    tenantLark: '将在 Lark 国际版（larksuite.com）创建应用。',
+    tenantFeishu: '将在飞书（feishu.cn）创建应用。',
+    switchToFeishuHint:
+      '如果你用的是飞书（中国版），请按 Ctrl-C 退出，改用：lark-channel-bridge run --tenant feishu',
     scanPrompt: '请用飞书 App 扫描以下二维码完成应用创建：',
     qrExpiry: (minutes) => `二维码有效期：约 ${minutes} 分钟`,
     openInBrowser: (url) => `也可以直接在浏览器打开：${url}`,
@@ -778,6 +795,9 @@ export const zh: Messages = {
       `非交互模式缺少 App Secret: ${appId}。` +
       '请传入 --app-secret <secret>，或在终端中重新运行命令后按提示输入。',
     appSecretPrompt: (appId) => `输入 ${appId} 的 App Secret: `,
+    appSecretHidden: '（输入不会显示在屏幕上，粘贴后直接回车）',
+    secretsSetUsage: '用法: lark-channel-bridge secrets set --app-id <id>',
+    secretsSetEmpty: '✗ 取消(secret 为空)',
     credentialsOk: '✓ 应用凭证校验通过',
     credentialsOkNamed: (botName) => `✓ 应用凭证校验通过: ${botName}`,
     multipleAgentsNonInteractive:
@@ -819,6 +839,10 @@ export const zh: Messages = {
 export const en: Messages = {
   wizard: {
     noAppConfig: 'No Lark app is configured yet. Starting the QR setup wizard.',
+    tenantLark: 'Creating the app on Lark international (larksuite.com).',
+    tenantFeishu: 'Creating the app on Feishu China (feishu.cn).',
+    switchToFeishuHint:
+      'On Feishu (China) instead? Press Ctrl-C and rerun: lark-channel-bridge run --tenant feishu',
     scanPrompt: 'Scan this QR code with the Lark app to create your app:',
     qrExpiry: (minutes) => `The QR code is valid for about ${minutes} minute(s).`,
     openInBrowser: (url) => `You can also open this link in a browser: ${url}`,
@@ -1208,13 +1232,18 @@ export const en: Messages = {
   bootstrap: {
     configSaved: (path) => `Config saved to ${path}`,
     noConfigNonInteractive:
-      'No configuration yet, and the QR app-creation wizard cannot run in non-interactive mode. ' +
-      'Run `lark-channel-bridge run` in a terminal to finish first-time setup, ' +
-      'or pass --app-id and --app-secret.',
+      'First-time setup has not run yet. The QR code needs a real terminal, and this command is ' +
+      'running non-interactively.\n' +
+      'Open a terminal and run: lark-channel-bridge run\n' +
+      'Scanning the QR code is all it takes — no app to create by hand, no App Secret to look up.\n' +
+      '(Already have a Lark app? Pass --app-id and --app-secret instead.)',
     missingSecretNonInteractive: (appId) =>
       `Missing App Secret for ${appId} in non-interactive mode. ` +
       'Pass --app-secret <secret>, or rerun the command in a terminal and enter it when prompted.',
     appSecretPrompt: (appId) => `Enter the App Secret for ${appId}: `,
+    appSecretHidden: '(Nothing appears as you type — paste it and press Enter.)',
+    secretsSetUsage: 'Usage: lark-channel-bridge secrets set --app-id <id>',
+    secretsSetEmpty: '✗ Cancelled (the secret was empty)',
     credentialsOk: '✓ App credentials verified',
     credentialsOkNamed: (botName) => `✓ App credentials verified: ${botName}`,
     multipleAgentsNonInteractive:
@@ -1262,6 +1291,10 @@ export const en: Messages = {
 export const vi: Messages = {
   wizard: {
     noAppConfig: 'Chưa có ứng dụng Lark nào được cấu hình. Bắt đầu trình tạo ứng dụng bằng mã QR.',
+    tenantLark: 'Ứng dụng sẽ được tạo trên Lark bản quốc tế (larksuite.com).',
+    tenantFeishu: 'Ứng dụng sẽ được tạo trên Feishu bản Trung Quốc (feishu.cn).',
+    switchToFeishuHint:
+      'Nếu bạn dùng Feishu (Trung Quốc): bấm Ctrl-C rồi chạy lại: lark-channel-bridge run --tenant feishu',
     scanPrompt: 'Mở app Lark trên điện thoại và quét mã QR dưới đây để tạo ứng dụng:',
     qrExpiry: (minutes) => `Mã QR có hiệu lực khoảng ${minutes} phút.`,
     openInBrowser: (url) => `Hoặc mở link này bằng trình duyệt: ${url}`,
@@ -1649,13 +1682,17 @@ export const vi: Messages = {
   bootstrap: {
     configSaved: (path) => `Đã lưu cấu hình vào ${path}`,
     noConfigNonInteractive:
-      'Chưa có cấu hình, và trình tạo ứng dụng bằng mã QR không chạy được ở chế độ không tương tác. ' +
-      'Hãy mở terminal và chạy `lark-channel-bridge run` để cài lần đầu, ' +
-      'hoặc truyền vào --app-id và --app-secret.',
+      'Chưa cài lần đầu. Mã QR cần một cửa sổ terminal thật, mà lệnh này đang chạy không tương tác.\n' +
+      'Hãy mở Terminal và chạy: lark-channel-bridge run\n' +
+      'Quét mã QR là xong — bạn không cần tự tạo ứng dụng hay đi tìm App Secret.\n' +
+      '(Người đã có sẵn ứng dụng Lark: dùng --app-id và --app-secret.)',
     missingSecretNonInteractive: (appId) =>
       `Thiếu App Secret của ${appId} ở chế độ không tương tác. ` +
       'Hãy truyền --app-secret <secret>, hoặc chạy lại lệnh trong terminal rồi nhập khi được hỏi.',
     appSecretPrompt: (appId) => `Nhập App Secret của ${appId}: `,
+    appSecretHidden: '(Màn hình sẽ không hiện ký tự nào — cứ dán vào rồi bấm Enter.)',
+    secretsSetUsage: 'Cách dùng: lark-channel-bridge secrets set --app-id <id>',
+    secretsSetEmpty: '✗ Đã huỷ (secret trống)',
     credentialsOk: '✓ Ứng dụng đã xác thực thành công',
     credentialsOkNamed: (botName) => `✓ Ứng dụng đã xác thực thành công: ${botName}`,
     multipleAgentsNonInteractive:

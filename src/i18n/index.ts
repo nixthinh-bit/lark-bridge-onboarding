@@ -88,7 +88,14 @@ function parseLang(value: string | undefined): Lang | undefined {
  *   1. `LARK_CHANNEL_LANG` — explicit override, also the escape hatch when the
  *      OS locale is wrong or unset (common under launchd / systemd / Docker).
  *   2. The POSIX locale environment (`LC_ALL` > `LC_MESSAGES` > `LANG`).
- *   3. Chinese — upstream's original behaviour.
+ *   3. English.
+ *
+ * Step 3 is where this fork parts with upstream, which falls back to Chinese.
+ * A missing locale is common (bare shells, SSH, CI, anything launchd starts),
+ * and the fork's audience is international — landing them in Chinese reads as
+ * "wrong product" and is the point where first-run setup gets abandoned. The
+ * module default stays `zh` (see {@link current}), so nothing changes for code
+ * that never calls a CLI entry point.
  *
  * Unrecognised values fall through rather than throw: a stray locale should
  * never stop the bridge from starting.
@@ -99,6 +106,6 @@ export function detectLang(env: NodeJS.ProcessEnv = process.env): Lang {
     parseLang(env.LC_ALL) ??
     parseLang(env.LC_MESSAGES) ??
     parseLang(env.LANG) ??
-    'zh'
+    'en'
   );
 }

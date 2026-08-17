@@ -278,17 +278,19 @@ if vi; then
 
 ${B}Xong. Bước tiếp theo — quét mã QR:${R}
 
-    ${B}${BIN} run${R}
+    ${B}${BIN} --lang vi run${R}
 
 Terminal sẽ hiện mã QR. Mở app Lark trên điện thoại và quét.
 Ứng dụng Lark được tạo tự động — bạn ${B}không${R} phải vào trang lập trình viên,
 ${B}không${R} phải tự tạo app, ${B}không${R} phải copy App ID hay App Secret.
 
+Mã QR trỏ về ${B}Lark bản quốc tế${R} (larksuite.com).
+Nếu bạn dùng Feishu (Trung Quốc): ${BIN} --lang vi run --tenant feishu
+
 ${YELLOW}⚠  Bot chỉ trả lời khi máy tính này đang bật và không ngủ.${R}
    Bridge không phải dịch vụ đám mây — Claude chạy ngay trên máy bạn.
 
 ${DIM}Hướng dẫn đầy đủ:  https://github.com/${REPO}${R}
-${DIM}Giao diện tiếng Việt: ${BIN} --lang vi run${R}
 
 EOF
 else
@@ -301,6 +303,9 @@ ${B}Done. Next step — scan the QR code:${R}
 A QR code appears in your terminal. Scan it with the Lark app on your phone.
 The Lark app is created automatically — you do ${B}not${R} need a developer console,
 you do ${B}not${R} create the app by hand, and you ${B}never${R} copy an App ID or Secret.
+
+The QR code points at ${B}Lark international${R} (larksuite.com).
+On Feishu (China) instead:  ${BIN} run --tenant feishu
 
 ${YELLOW}⚠  The bot only answers while this computer is awake.${R}
    The bridge is not a cloud service — Claude runs on this machine.
