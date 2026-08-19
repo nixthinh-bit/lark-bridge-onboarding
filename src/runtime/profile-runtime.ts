@@ -1,8 +1,9 @@
 import { mkdir, readFile, realpath } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import * as p from '@clack/prompts';
-import { DEFAULT_TENANT, runRegistrationWizard } from '../bot/wizard';
+import { DEFAULT_TENANT } from '../bot/wizard';
 import { detectInstalledAgents, type DetectedAgent } from '../cli/agent-detection';
+import { brandLabel, runFirstRunAppSetup } from '../cli/app-setup';
 import { t } from '../i18n';
 import {
   createBootstrapCodexConfig,
@@ -51,7 +52,7 @@ import {
   hasLegacyLarkCliSourceOverlay,
   recoverLegacyLarkCliSourceOverlay,
 } from '../lark-cli/legacy-source-overlay';
-import { validateAppCredentials } from '../utils/feishu-auth';
+import { validateAppCredentials, validateAppCredentialsAnyTenant } from '../utils/feishu-auth';
 
 export interface ResolveProfileRuntimeOptions {
   config?: string;
@@ -434,7 +435,9 @@ async function resolveBootstrapAppConfig(opts: ResolveProfileRuntimeOptions): Pr
         t().bootstrap.noConfigNonInteractive,
       );
     }
-    return runRegistrationWizard(tenantBrandFromString(opts.tenant));
+    // Undefined, not the default brand: the setup flow asks when nobody said,
+    // and only skips the question when `--tenant` already answered it.
+    return runFirstRunAppSetup({ tenant: requestedTenantBrand(opts.tenant), interactive: true });
   }
   let appSecret = opts.appSecret;
   if (!appSecret) {
@@ -449,10 +452,17 @@ async function resolveBootstrapAppConfig(opts: ResolveProfileRuntimeOptions): Pr
     appSecret = await promptPassword(t().bootstrap.appSecretPrompt(opts.appId));
   }
   if (!appSecret) throw new Error('app secret is required');
-  const tenant = tenantBrandFromString(opts.tenant);
-  const result = await validateAppCredentials(opts.appId, appSecret, tenant);
+  const requested = requestedTenantBrand(opts.tenant);
+  // `--tenant` is taken at its word; an unstated brand is a question the two
+  // hosts can answer between them, so nobody is rejected for guessing wrong.
+  const result = requested
+    ? { ...(await validateAppCredentials(opts.appId, appSecret, requested)), tenant: requested }
+    : await validateAppCredentialsAnyTenant(opts.appId, appSecret, DEFAULT_TENANT);
   if (!result.ok) {
     throw new Error(`app credentials validation failed: ${result.reason ?? 'unknown'}`);
+  }
+  if (!requested && result.tenant !== DEFAULT_TENANT) {
+    console.log(t().setup.tenantCorrected(brandLabel(result.tenant)));
   }
   if (result.botName) {
     console.log(t().bootstrap.credentialsOkNamed(result.botName));
@@ -464,7 +474,7 @@ async function resolveBootstrapAppConfig(opts: ResolveProfileRuntimeOptions): Pr
       app: {
         id: opts.appId,
         secret: appSecret,
-        tenant,
+        tenant: result.tenant,
       },
     },
   };
@@ -474,9 +484,16 @@ function isInteractiveTerminal(): boolean {
   return Boolean(process.stdin.isTTY && process.stdout.isTTY);
 }
 
-function tenantBrandFromString(value: string | undefined): TenantBrand {
-  // Unset means Lark international in this fork (upstream assumed Feishu).
-  if (value === undefined) return DEFAULT_TENANT;
+/**
+ * The brand the operator named, or `undefined` when they named none.
+ *
+ * Deliberately not defaulted: "nobody said" and "they said Lark" used to be
+ * the same value, which is how a Feishu operator ended up silently pointed at
+ * larksuite.com. Callers now get to tell the two apart — the setup flow asks,
+ * and the credential check consults both hosts.
+ */
+function requestedTenantBrand(value: string | undefined): TenantBrand | undefined {
+  if (value === undefined) return undefined;
   if (value === 'feishu' || value === 'lark') return value;
   throw new Error(`unsupported tenant: ${value}`);
 }

@@ -32,7 +32,11 @@ const auth = vi.hoisted(() => {
   type ValidationMockResult = { ok: boolean; botName?: string; reason?: string };
   return {
     validateAppCredentials: vi.fn(
-      async (): Promise<ValidationMockResult> => ({ ok: true, botName: 'Bridge Bot' }),
+      async (
+        _id: string,
+        _secret: string,
+        _tenant: 'feishu' | 'lark',
+      ): Promise<ValidationMockResult> => ({ ok: true, botName: 'Bridge Bot' }),
     ),
   };
 });
@@ -42,8 +46,20 @@ vi.mock('../../../src/bot/wizard', () => ({
   DEFAULT_TENANT: 'lark',
 }));
 
+// First-run bootstrap now goes through the setup flow, which asks the operator
+// which brand they are on before it ever reaches the QR wizard. Stubbing it
+// keeps these tests about what bootstrap does with the resulting config.
+vi.mock('../../../src/cli/app-setup', () => ({
+  runFirstRunAppSetup: vi.fn(async () => wizard.next),
+  brandLabel: (tenant: string) => tenant,
+}));
+
 vi.mock('../../../src/utils/feishu-auth', () => ({
   validateAppCredentials: auth.validateAppCredentials,
+  validateAppCredentialsAnyTenant: async (id: string, secret: string, tenant: 'feishu' | 'lark') => ({
+    ...(await auth.validateAppCredentials(id, secret, tenant)),
+    tenant,
+  }),
 }));
 
 const app = {

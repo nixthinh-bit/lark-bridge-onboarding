@@ -100,19 +100,23 @@ lark-channel-bridge run
 
 **You do not need to open a developer console, create an app by hand, or copy an App ID or App Secret.** The wizard does all of it:
 
-1. A **QR code** appears in your terminal.
-2. Scan it with the **Lark app on your phone**.
-3. The Lark app is **created automatically**, with permissions pre-filled.
-4. Done — config is written to `~/.lark-channel/config.json`.
+1. The terminal asks **which one you use**. Pick with the arrow keys:
+   - **Lark (international)** — `larksuite.com`
+   - **Feishu (China)** — `feishu.cn`
+   - *I already created an app in the developer console* — see below
+2. A **QR code** appears, on the site you picked.
+3. Scan it with the **app on your phone**.
+4. The app is **created automatically**, with permissions pre-filled, and config is written to `~/.lark-channel/config.json`.
 
 Whoever scans the QR becomes the app owner, so you can message the bot immediately.
 
 Use `--lang vi` (or `en`, `zh`) to override the language detected from your OS locale.
 
-> **The QR code goes to Lark international (`larksuite.com`).** That is this fork's default, and the terminal says so before the code renders.
-> On **Feishu (China)**? Run `lark-channel-bridge run --tenant feishu` instead.
+> **Picked the wrong one?** Press `Ctrl-C` and run the command again. Scanning a `larksuite.com` code with the Feishu app (or the reverse) cannot work — the app you are about to create does not exist on the other site.
 >
-> **App creation blocked?** Some organizations require admin approval — ask your Lark admin.
+> Scripting it? `--tenant lark` or `--tenant feishu` answers the question up front and skips the prompt.
+
+**App creation blocked?** Some organizations do not allow creating apps by scanning. Then create the app yourself in the developer console and pick the third option — the terminal asks for the App ID and App Secret, checks them on the spot, and works out which of the two sites the app lives on for you. Nothing to type on the command line, and nothing to know about tenants.
 
 ### 6. Pick a model — and protect your 5-hour window
 
@@ -178,7 +182,7 @@ The first run opens a QR-code wizard:
 
 You do not need to choose a project directory up front. The bridge creates a profile-managed default working directory; after startup, send `/cd <path>` in Feishu / Lark to switch to a real project.
 
-If you already have a PersonalAgent app, pass `--app-id` during initialization to skip app creation. The command then prompts for the App Secret — the prompt echoes nothing, so paste it and press Enter.
+If you already have a PersonalAgent app, the setup prompt's third option takes its App ID and App Secret interactively — no flags needed. To skip the prompt, pass `--app-id` during initialization. The command then asks for the App Secret; the prompt echoes nothing, so paste it and press Enter.
 
 ```bash
 lark-channel-bridge run --app-id cli_xxx
@@ -186,7 +190,7 @@ lark-channel-bridge run --app-id cli_xxx
 lark-channel-bridge start --app-id cli_xxx
 ```
 
-Both the QR wizard and `--app-id` assume **Lark international**. For a Feishu (China) tenant, add `--tenant feishu`.
+Credentials are verified against **both** Lark international and Feishu China, and the tenant that accepts them is the one recorded — so an app created on either site works without saying which. Pass `--tenant lark` or `--tenant feishu` to check only that one; the QR wizard takes the same flag to skip its opening question.
 
 ## Background service
 
@@ -439,6 +443,10 @@ Cloud-doc comments do not need a separate workspace binding or document allowlis
 **The agent subprocess looks frozen (card stuck on the last frame).** The bridge supports an idle watchdog: if the agent emits nothing for N minutes, the process is killed and the card is annotated with the auto-termination reason. Disabled by default. Enable with `/config` globally, or `/timeout 10` for the current session; `/timeout off` disables it for the session; `/timeout default` clears the session override.
 
 **The agent says it cannot see an image I sent.** Upgrade to the latest version. Releases before 0.1.0 had a filename-dedup bug.
+
+**The QR code will not scan, or lands on a console I cannot sign in to.** You picked the wrong brand: a `larksuite.com` code cannot be scanned by the Feishu app, and vice versa. Press `Ctrl-C`, run the command again, and pick the other one.
+
+**I pasted my App Secret and nothing appeared on screen.** That is the prompt hiding it, not a hang. Paste and press Enter.
 
 ## Testing and CI
 

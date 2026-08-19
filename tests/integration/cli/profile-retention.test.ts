@@ -20,11 +20,20 @@ import { withProfileAndAppLocks } from '../../../src/runtime/locks';
 import { writeVersionExecutable } from '../../helpers/fake-executable';
 
 const auth = vi.hoisted(() => ({
-  validateAppCredentials: vi.fn(async () => ({ ok: true, botName: 'Recreated Bot' })),
+  validateAppCredentials: vi.fn(
+    async (_id: string, _secret: string, _tenant: 'feishu' | 'lark') => ({
+      ok: true,
+      botName: 'Recreated Bot',
+    }),
+  ),
 }));
 
 vi.mock('../../../src/utils/feishu-auth', () => ({
   validateAppCredentials: auth.validateAppCredentials,
+  validateAppCredentialsAnyTenant: async (id: string, secret: string, tenant: 'feishu' | 'lark') => ({
+    ...(await auth.validateAppCredentials(id, secret, tenant)),
+    tenant,
+  }),
 }));
 
 const roots: string[] = [];

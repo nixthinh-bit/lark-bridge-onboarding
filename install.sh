@@ -280,12 +280,14 @@ ${B}Xong. Bước tiếp theo — quét mã QR:${R}
 
     ${B}${BIN} --lang vi run${R}
 
-Terminal sẽ hiện mã QR. Mở app Lark trên điện thoại và quét.
-Ứng dụng Lark được tạo tự động — bạn ${B}không${R} phải vào trang lập trình viên,
-${B}không${R} phải tự tạo app, ${B}không${R} phải copy App ID hay App Secret.
+Terminal sẽ ${B}hỏi bạn dùng Lark (quốc tế) hay Feishu (Trung Quốc)${R} — chọn
+bằng phím mũi tên, rồi mã QR hiện ra đúng bên bạn chọn. Quét bằng app trên
+điện thoại là xong: ứng dụng được tạo tự động, bạn ${B}không${R} phải vào trang
+lập trình viên, ${B}không${R} phải copy App ID hay App Secret.
 
-Mã QR trỏ về ${B}Lark bản quốc tế${R} (larksuite.com).
-Nếu bạn dùng Feishu (Trung Quốc): ${BIN} --lang vi run --tenant feishu
+Công ty chặn tạo ứng dụng bằng cách quét mã? Chọn mục thứ ba trong danh sách —
+terminal sẽ hỏi App ID và App Secret của ứng dụng bạn tự tạo, và tự nhận ra nó
+thuộc Lark hay Feishu.
 
 ${YELLOW}⚠  Bot chỉ trả lời khi máy tính này đang bật và không ngủ.${R}
    Bridge không phải dịch vụ đám mây — Claude chạy ngay trên máy bạn.
@@ -300,12 +302,14 @@ ${B}Done. Next step — scan the QR code:${R}
 
     ${B}${BIN} run${R}
 
-A QR code appears in your terminal. Scan it with the Lark app on your phone.
-The Lark app is created automatically — you do ${B}not${R} need a developer console,
-you do ${B}not${R} create the app by hand, and you ${B}never${R} copy an App ID or Secret.
+The terminal ${B}asks whether you use Lark (international) or Feishu (China)${R},
+then shows a QR code for the one you picked. Scan it with the app on your
+phone and you are done: the app is created automatically, with no developer
+console and no App ID or Secret to copy.
 
-The QR code points at ${B}Lark international${R} (larksuite.com).
-On Feishu (China) instead:  ${BIN} run --tenant feishu
+Organization blocks creating apps by scanning? Pick the third option — the
+terminal asks for the App ID and Secret of an app you created yourself, and
+works out which of the two it belongs to.
 
 ${YELLOW}⚠  The bot only answers while this computer is awake.${R}
    The bridge is not a cloud service — Claude runs on this machine.

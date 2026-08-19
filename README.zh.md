@@ -5,7 +5,7 @@
 > 本 fork 只在其上增加一层：面向不写代码用户的上手引导（一条命令安装、英文 / 越南语双语说明、向导文案翻译、通俗的模型预设）。
 >
 > **⚠️ 两处默认值与上游不同**（本 fork 面向国际版 Lark 用户）：
-> 1. 扫码向导默认在 **Lark 国际版（larksuite.com）** 创建应用；飞书（中国版）请加 `--tenant feishu`。
+> 1. 首次运行会先问你用的是 **Lark 国际版（larksuite.com）** 还是**飞书（中国版，feishu.cn）**，再据此出码；不想被问就加 `--tenant feishu` 或 `--tenant lark`。上游默认飞书且不询问。
 > 2. 系统语言检测不到时界面回退到**英文**（上游回退到中文）；想固定中文用 `--lang zh` 或 `LARK_CHANNEL_LANG=zh`。
 >
 > **如果你能熟练使用终端，请直接使用[上游项目](https://github.com/zarazhangrui/lark-coding-agent-bridge)，无需本 fork。**
@@ -51,15 +51,20 @@ lark-channel-bridge run
 
 第一次运行会进入扫码向导：
 
-1. 终端渲染二维码。
-2. 用飞书 App 扫码。
-3. 选择或创建 PersonalAgent 应用。
-4. 如果终端提示，选择本次要初始化的 agent。
-5. 成功后配置写入 `~/.lark-channel/config.json`。
+1. 终端先问你用的是哪一个：**Lark 国际版（larksuite.com）**、**飞书（中国版，feishu.cn）**，或者「我已经在开发者后台建好应用了」。
+2. 按所选站点渲染二维码。
+3. 用对应的 App 扫码。
+4. 选择或创建 PersonalAgent 应用。
+5. 如果终端提示，选择本次要初始化的 agent。
+6. 成功后配置写入 `~/.lark-channel/config.json`。
+
+用飞书 App 扫 `larksuite.com` 的码（或反过来）一定不成功——要建的应用在另一边并不存在。选错了按 `Ctrl-C` 重跑即可。
+
+**组织禁止扫码自助创建应用？** 那就在开发者后台自己建好，然后选第三项：终端会问 App ID 和 App Secret，当场校验，并自动判断这套凭据属于飞书还是 Lark。不用在命令行拼参数。
 
 没有指定项目目录也可以启动。bridge 会创建一个 profile 托管的默认工作目录；启动后在飞书里发送 `/cd <path>` 切到实际项目。
 
-如果已经有 PersonalAgent app，可以在初始化时传 `--app-id` 跳过创建应用流程；命令会提示输入 App Secret。
+如果已经有 PersonalAgent app，向导第三项就能交互式录入，无需参数；也可以在初始化时传 `--app-id` 跳过提问，命令会再提示输入 App Secret（粘贴时不显示字符）。
 
 ```bash
 lark-channel-bridge run --app-id cli_xxx
@@ -67,7 +72,7 @@ lark-channel-bridge run --app-id cli_xxx
 lark-channel-bridge start --app-id cli_xxx
 ```
 
-Lark 国际版应用可加 `--tenant lark`。
+未指定 `--tenant` 时，凭据会同时向飞书和 Lark 国际版校验，以接受它的那一方为准写入配置；指定 `--tenant lark` / `--tenant feishu` 则只校验该站点。
 
 ## 后台运行
 

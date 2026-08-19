@@ -26,6 +26,51 @@ export interface Messages {
     creator: (openId: string) => string;
     creatorUnresolved: string;
   };
+  /**
+   * First-run setup chooser.
+   *
+   * Two things sent people away at this step. Feishu users were handed a
+   * larksuite.com QR by default and landed on a console they cannot sign in
+   * to, with the way out (`--tenant feishu`) printed as prose they had to
+   * read, understand, and retype. And anyone whose organization blocks
+   * self-serve app creation had to fall back to the developer console, then
+   * retype an App ID and paste an invisible secret into a flag-laden command.
+   * Both are now questions the terminal asks.
+   */
+  setup: {
+    intro: string;
+    pathQuestion: string;
+    pathLark: string;
+    pathLarkHint: string;
+    pathFeishu: string;
+    pathFeishuHint: string;
+    pathManual: string;
+    pathManualHint: string;
+    cancelled: string;
+    /** The QR flow threw — most often an org that forbids self-serve apps. */
+    qrFailed: (reason: string) => string;
+    offerManualAfterQrFailure: string;
+    manualIntro: string;
+    manualWhereToFind: string;
+    appIdPrompt: string;
+    appIdInvalid: string;
+    secretPrompt: string;
+    /** Said before muting the input: a silent prompt reads as a hung process. */
+    secretHidden: string;
+    secretEmpty: string;
+    validating: string;
+    validationFailed: (reason: string) => string;
+    /** The credentials turned out to live on the other brand; we followed. */
+    tenantCorrected: (brand: string) => string;
+    exhausted: string;
+  };
+  /** Why a credential check failed, in the operator's language. */
+  auth: {
+    networkError: (detail: string) => string;
+    httpStatus: (status: number) => string;
+    badJson: string;
+    rejected: (code: string, msg: string) => string;
+  };
   cards: {
     /** Buttons repeated across cards — one definition, one translation. */
     buttons: {
@@ -418,7 +463,7 @@ export const zh: Messages = {
     tenantLark: '将在 Lark 国际版（larksuite.com）创建应用。',
     tenantFeishu: '将在飞书（feishu.cn）创建应用。',
     switchToFeishuHint:
-      '如果你用的是飞书（中国版），请按 Ctrl-C 退出，改用：lark-channel-bridge run --tenant feishu',
+      '不是这个？按 Ctrl-C 后重新运行本命令即可选择飞书（或直接加 --tenant feishu）。',
     scanPrompt: '请用飞书 App 扫描以下二维码完成应用创建：',
     qrExpiry: (minutes) => `二维码有效期：约 ${minutes} 分钟`,
     openInBrowser: (url) => `也可以直接在浏览器打开：${url}`,
@@ -428,6 +473,37 @@ export const zh: Messages = {
     creator: (openId) => `  Creator: ${openId} (Lark 应用 owner，自动豁免访问控制)`,
     creatorUnresolved:
       '  ⚠️ 未拿到扫码用户的 open_id；启动后会通过应用 owner API 解析创建者。',
+  },
+  setup: {
+    intro: '配置飞书 / Lark 应用',
+    pathQuestion: '你用的是哪一个？想怎么连接？',
+    pathLark: 'Lark（国际版）',
+    pathLarkHint: 'larksuite.com — 扫码即可，应用自动创建',
+    pathFeishu: '飞书（中国版）',
+    pathFeishuHint: 'feishu.cn — 扫码即可，应用自动创建',
+    pathManual: '我已经在开发者后台创建好应用了',
+    pathManualHint: '粘贴 App ID 和 App Secret — 组织禁止自助创建应用时走这条',
+    cancelled: '已取消配置。',
+    qrFailed: (reason) => `扫码流程没有完成：${reason}`,
+    offerManualAfterQrFailure:
+      '部分组织禁止自助创建应用。如果你的组织如此，请到开发者后台创建应用，再把凭据粘贴到这里。',
+    manualIntro: '请粘贴你刚创建的应用的凭据。',
+    manualWhereToFind: '开发者后台 → 你的应用 → 凭证与基础信息。App ID 以 “cli_” 开头。',
+    appIdPrompt: 'App ID：',
+    appIdInvalid: '这看起来不像 App ID。它以 “cli_” 开头，请完整复制。',
+    secretPrompt: 'App Secret：',
+    secretHidden: '（粘贴时屏幕上不会出现任何字符，这是正常的。粘贴后直接回车。）',
+    secretEmpty: '没有读到内容，请再粘贴一次。',
+    validating: '正在校验凭据…',
+    validationFailed: (reason) => `✗ 凭据未通过校验：${reason}`,
+    tenantCorrected: (brand) => `这组凭据属于${brand}，已自动改用它。`,
+    exhausted: '未能校验凭据。请到开发者后台核对后重新运行本命令。',
+  },
+  auth: {
+    networkError: (detail) => `网络错误：${detail}`,
+    httpStatus: (status) => `服务器返回 HTTP ${status}`,
+    badJson: '服务器返回的不是合法 JSON',
+    rejected: (code, msg) => `服务器拒绝（code ${code}：${msg}）`,
   },
   cards: {
     // Verbatim from upstream — do not reword.
@@ -842,7 +918,7 @@ export const en: Messages = {
     tenantLark: 'Creating the app on Lark international (larksuite.com).',
     tenantFeishu: 'Creating the app on Feishu China (feishu.cn).',
     switchToFeishuHint:
-      'On Feishu (China) instead? Press Ctrl-C and rerun: lark-channel-bridge run --tenant feishu',
+      'Wrong one? Press Ctrl-C and run the command again to pick Feishu (or pass --tenant feishu).',
     scanPrompt: 'Scan this QR code with the Lark app to create your app:',
     qrExpiry: (minutes) => `The QR code is valid for about ${minutes} minute(s).`,
     openInBrowser: (url) => `You can also open this link in a browser: ${url}`,
@@ -852,6 +928,39 @@ export const en: Messages = {
     creator: (openId) => `  Creator: ${openId} (Lark app owner — always allowed to use the bot)`,
     creatorUnresolved:
       "  ⚠️ Could not read the scanning user's open_id; the bridge will resolve the app owner on first start.",
+  },
+  setup: {
+    intro: 'Set up your Lark / Feishu app',
+    pathQuestion: 'Which one do you use, and how do you want to connect it?',
+    pathLark: 'Lark (international)',
+    pathLarkHint: 'larksuite.com — scan a QR code, the app is created for you',
+    pathFeishu: 'Feishu (China)',
+    pathFeishuHint: 'feishu.cn — scan a QR code, the app is created for you',
+    pathManual: 'I already created an app in the developer console',
+    pathManualHint: 'paste its App ID and Secret — for orgs that block self-serve apps',
+    cancelled: 'Setup cancelled.',
+    qrFailed: (reason) => `The QR step did not finish: ${reason}`,
+    offerManualAfterQrFailure:
+      'Some organizations do not allow creating apps by scanning. If yours is one, create the app in the developer console and paste its credentials here instead.',
+    manualIntro: 'Paste the credentials of the app you created.',
+    manualWhereToFind:
+      'Developer console → your app → Credentials & Basic Info. The App ID starts with "cli_".',
+    appIdPrompt: 'App ID: ',
+    appIdInvalid: 'That does not look like an App ID. It starts with "cli_" — copy the whole value.',
+    secretPrompt: 'App Secret: ',
+    secretHidden: '(Nothing appears on screen as you paste — that is normal. Paste it and press Enter.)',
+    secretEmpty: 'Nothing came through. Paste it again.',
+    validating: 'Checking the credentials…',
+    validationFailed: (reason) => `✗ Those credentials were rejected: ${reason}`,
+    tenantCorrected: (brand) => `These credentials belong to ${brand} — using that instead.`,
+    exhausted:
+      'Could not verify the credentials. Check them in the developer console, then run this command again.',
+  },
+  auth: {
+    networkError: (detail) => `network error: ${detail}`,
+    httpStatus: (status) => `the server replied HTTP ${status}`,
+    badJson: 'the server reply was not valid JSON',
+    rejected: (code, msg) => `rejected by the server (code ${code}: ${msg})`,
   },
   cards: {
     buttons: {
@@ -1294,7 +1403,7 @@ export const vi: Messages = {
     tenantLark: 'Ứng dụng sẽ được tạo trên Lark bản quốc tế (larksuite.com).',
     tenantFeishu: 'Ứng dụng sẽ được tạo trên Feishu bản Trung Quốc (feishu.cn).',
     switchToFeishuHint:
-      'Nếu bạn dùng Feishu (Trung Quốc): bấm Ctrl-C rồi chạy lại: lark-channel-bridge run --tenant feishu',
+      'Không phải cái này? Bấm Ctrl-C rồi chạy lại lệnh để chọn Feishu (hoặc thêm --tenant feishu).',
     scanPrompt: 'Mở app Lark trên điện thoại và quét mã QR dưới đây để tạo ứng dụng:',
     qrExpiry: (minutes) => `Mã QR có hiệu lực khoảng ${minutes} phút.`,
     openInBrowser: (url) => `Hoặc mở link này bằng trình duyệt: ${url}`,
@@ -1304,6 +1413,39 @@ export const vi: Messages = {
     creator: (openId) => `  Người tạo: ${openId} (chủ ứng dụng Lark — luôn được phép dùng bot)`,
     creatorUnresolved:
       '  ⚠️ Chưa lấy được open_id của người quét mã; bridge sẽ tự xác định chủ ứng dụng khi khởi động lần đầu.',
+  },
+  setup: {
+    intro: 'Thiết lập ứng dụng Lark / Feishu',
+    pathQuestion: 'Bạn đang dùng cái nào, và muốn kết nối theo kiểu gì?',
+    pathLark: 'Lark (bản quốc tế)',
+    pathLarkHint: 'larksuite.com — quét mã QR, ứng dụng được tạo tự động',
+    pathFeishu: 'Feishu (Trung Quốc)',
+    pathFeishuHint: 'feishu.cn — quét mã QR, ứng dụng được tạo tự động',
+    pathManual: 'Tôi đã tự tạo ứng dụng trong trang lập trình viên rồi',
+    pathManualHint: 'dán App ID và App Secret — dành cho công ty chặn tự tạo ứng dụng',
+    cancelled: 'Đã huỷ thiết lập.',
+    qrFailed: (reason) => `Bước quét mã QR chưa xong: ${reason}`,
+    offerManualAfterQrFailure:
+      'Một số công ty không cho tạo ứng dụng bằng cách quét mã. Nếu công ty bạn như vậy, hãy vào trang lập trình viên tạo ứng dụng rồi dán thông tin của nó vào đây.',
+    manualIntro: 'Dán thông tin của ứng dụng bạn vừa tạo.',
+    manualWhereToFind:
+      'Trang lập trình viên → ứng dụng của bạn → mục thông tin cơ bản. App ID bắt đầu bằng “cli_”.',
+    appIdPrompt: 'App ID: ',
+    appIdInvalid: 'Cái này trông không giống App ID. Nó bắt đầu bằng “cli_” — hãy copy trọn giá trị.',
+    secretPrompt: 'App Secret: ',
+    secretHidden: '(Dán vào sẽ không thấy chữ nào hiện lên — bình thường thôi. Cứ dán rồi bấm Enter.)',
+    secretEmpty: 'Chưa nhận được gì. Bạn dán lại giúp nhé.',
+    validating: 'Đang kiểm tra thông tin…',
+    validationFailed: (reason) => `✗ Thông tin bị từ chối: ${reason}`,
+    tenantCorrected: (brand) => `Thông tin này thuộc ${brand} — đã tự chuyển sang dùng ${brand}.`,
+    exhausted:
+      'Chưa xác minh được thông tin. Hãy kiểm tra lại trong trang lập trình viên rồi chạy lệnh này lần nữa.',
+  },
+  auth: {
+    networkError: (detail) => `lỗi mạng: ${detail}`,
+    httpStatus: (status) => `máy chủ trả về HTTP ${status}`,
+    badJson: 'máy chủ trả về dữ liệu không hợp lệ',
+    rejected: (code, msg) => `máy chủ từ chối (mã ${code}: ${msg})`,
   },
   cards: {
     buttons: {

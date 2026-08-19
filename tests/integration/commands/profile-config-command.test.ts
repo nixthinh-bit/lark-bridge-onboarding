@@ -24,6 +24,12 @@ vi.mock('../../../src/utils/feishu-auth', () => ({
     botName: 'Updated Bot',
     botOpenId: 'ou-bot',
   })),
+  validateAppCredentialsAnyTenant: vi.fn(async (_id: string, _secret: string, tenant: string) => ({
+    ok: true,
+    botName: 'Updated Bot',
+    botOpenId: 'ou-bot',
+    tenant,
+  })),
 }));
 
 const identityPolicyMocks = vi.hoisted(() => ({

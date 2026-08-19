@@ -118,10 +118,13 @@ lark-channel-bridge run
 
 **Bạn KHÔNG cần vào trang dành cho lập trình viên. KHÔNG cần tự tạo ứng dụng. KHÔNG cần copy App ID hay App Secret.** Trình hướng dẫn lo hết:
 
-1. Terminal hiện ra một **mã QR**.
-2. Mở **app Lark trên điện thoại**, quét mã đó.
-3. Ứng dụng Lark được **tạo tự động**, quyền cũng được điền sẵn.
-4. Xong. Cấu hình lưu vào `~/.lark-channel/config.json`.
+1. Terminal **hỏi bạn đang dùng cái nào**. Dùng phím mũi tên để chọn:
+   - **Lark (bản quốc tế)** — `larksuite.com`
+   - **Feishu (Trung Quốc)** — `feishu.cn`
+   - *Tôi đã tự tạo ứng dụng trong trang lập trình viên rồi* — xem bên dưới
+2. **Mã QR** hiện ra, đúng bên bạn vừa chọn.
+3. Mở **app trên điện thoại** và quét mã đó.
+4. Ứng dụng được **tạo tự động**, quyền điền sẵn, cấu hình lưu vào `~/.lark-channel/config.json`.
 
 Người quét mã QR **tự động trở thành chủ ứng dụng**, nên bạn nhắn được cho bot ngay từ tin đầu tiên mà không phải chỉnh gì.
 
@@ -131,11 +134,13 @@ Muốn giao diện tiếng Việt (nếu máy bạn đang để tiếng Anh):
 lark-channel-bridge --lang vi run
 ```
 
-> **Mã QR mặc định trỏ về Lark bản quốc tế (`larksuite.com`).** Terminal cũng in rõ dòng này ngay trước khi hiện mã, nên bạn biết mình đang quét vào đâu.
+> **Chọn nhầm?** Bấm `Ctrl-C` rồi chạy lại lệnh. Quét mã `larksuite.com` bằng app Feishu (hoặc ngược lại) là chắc chắn không được — ứng dụng sắp tạo không tồn tại ở bên kia.
 >
-> Nếu bạn dùng **Feishu (Trung Quốc)**, chạy `lark-channel-bridge run --tenant feishu`.
->
-> **Công ty bạn chặn tạo ứng dụng?** Một số tổ chức bắt quản trị viên duyệt trước. Nếu bị từ chối, hãy nhờ admin Lark của công ty.
+> Nếu bạn viết script: thêm `--tenant lark` hoặc `--tenant feishu` để trả lời sẵn và bỏ qua câu hỏi.
+
+**Công ty bạn chặn tạo ứng dụng bằng cách quét mã?** Có công ty bắt phải tự tạo trong trang lập trình viên. Khi đó cứ tạo ứng dụng ở đó rồi chọn **mục thứ ba**: terminal sẽ hỏi App ID và App Secret, kiểm tra ngay tại chỗ, và **tự nhận ra ứng dụng của bạn thuộc Lark hay Feishu** — bạn không phải gõ thêm gì trên dòng lệnh, cũng không cần biết "tenant" là gì.
+
+> Chỗ nhập App Secret sẽ **không hiện chữ nào** khi bạn dán vào. Đây là bình thường (để người ngồi cạnh không đọc trộm được), không phải máy bị treo — cứ dán rồi bấm Enter.
 
 Chạy nền để khỏi phải mở terminal suốt:
 
@@ -192,6 +197,8 @@ Và cân nhắc hạ quyền của bot. Mặc định là `full` (Claude làm g�
 |---|---|---|
 | `Không tìm thấy Claude Code trên máy này` | Chưa cài `claude` (hoặc mới chỉ cài Claude.app) | `npm i -g @anthropic-ai/claude-code` |
 | `Chưa có cấu hình…` | Chưa chạy lần đầu | Chạy `lark-channel-bridge run` trong terminal |
+| Quét mã QR mà app báo không nhận | Chọn nhầm Lark / Feishu | `Ctrl-C`, chạy lại và chọn đúng bên bạn đang dùng |
+| Dán App Secret mà màn hình không hiện gì | Bình thường — ô này luôn ẩn | Cứ dán rồi bấm Enter |
 | Bot không trả lời | Máy ngủ / tắt / daemon chết | `lark-channel-bridge status` |
 | Bot chạy nhưng không đụng được Lark | Thiếu lark-cli | Xem [mục 3](#3-cần-chuẩn-bị-gì) |
 
