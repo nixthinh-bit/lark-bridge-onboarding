@@ -106,10 +106,10 @@ async function askSetupPath(): Promise<SetupPath> {
     p.cancel(m.cancelled);
     throw new SetupCancelledError(m.cancelled);
   }
-  // Close the prompt block before the QR code takes over the terminal, and
-  // leave the choice on screen: the QR itself gives no clue which site it
-  // belongs to, and that is exactly what people get wrong.
-  p.outro(options.find((option) => option.value === choice)?.label ?? '');
+  // Close the prompt block before the QR code takes over the terminal. No
+  // message: the picker already leaves the chosen label on screen, and the
+  // wizard names the site again on the line above the QR code.
+  p.outro();
   return choice;
 }
 
