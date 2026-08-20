@@ -6,6 +6,15 @@ const ENDPOINTS: Record<TenantBrand, string> = {
   lark: 'https://open.larksuite.com',
 };
 
+/**
+ * Neither call below had a timeout: a blackholed host (a proxy, a firewalled
+ * corporate network) left "Checking the credentials…" hanging forever, and
+ * {@link validateAppCredentialsAnyTenant} can stack up to four such requests
+ * behind it. Bounding each one turns a silent hang into a reportable
+ * `networkError`.
+ */
+const FETCH_TIMEOUT_MS = 15_000;
+
 export interface ValidationResult {
   ok: boolean;
   reason?: string;
@@ -50,6 +59,7 @@ export async function validateAppCredentials(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ app_id: appId, app_secret: appSecret }),
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
   } catch (err) {
     return { ok: false, reason: m.networkError(err instanceof Error ? err.message : String(err)) };
@@ -108,6 +118,7 @@ export async function validateAppCredentialsAnyTenant(
 async function fetchBotInfo(base: string, token: string): Promise<BotInfoResp | undefined> {
   const resp = await fetch(`${base}/open-apis/bot/v3/info`, {
     headers: { Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   });
   if (!resp.ok) return undefined;
   return (await resp.json()) as BotInfoResp;

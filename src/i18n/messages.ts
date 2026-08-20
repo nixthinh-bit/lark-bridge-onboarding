@@ -50,14 +50,22 @@ export interface Messages {
     /** The QR flow threw — most often an org that forbids self-serve apps. */
     qrFailed: (reason: string) => string;
     offerManualAfterQrFailure: string;
+    /** Asked after a failed QR attempt, whose tenant is already known. */
+    confirmManualNow: string;
     manualIntro: string;
     manualWhereToFind: string;
+    /** The QR flow enables this automatically; a console-created app needs it by hand. */
+    manualScopeNote: string;
     appIdPrompt: string;
     appIdInvalid: string;
+    /** Ran out of retries typing a validly-shaped App ID. */
+    appIdExhausted: string;
     secretPrompt: string;
     /** Said before muting the input: a silent prompt reads as a hung process. */
     secretHidden: string;
     secretEmpty: string;
+    /** Ran out of retries on a secret that kept coming through empty. */
+    secretExhausted: string;
     validating: string;
     validationFailed: (reason: string) => string;
     /** The credentials turned out to live on the other brand; we followed. */
@@ -487,13 +495,18 @@ export const zh: Messages = {
     qrFailed: (reason) => `扫码流程没有完成：${reason}`,
     offerManualAfterQrFailure:
       '部分组织禁止自助创建应用。如果你的组织如此，请到开发者后台创建应用，再把凭据粘贴到这里。',
+    confirmManualNow: '现在输入该应用的 App ID 和 App Secret？',
     manualIntro: '请粘贴你刚创建的应用的凭据。',
     manualWhereToFind: '开发者后台 → 你的应用 → 凭证与基础信息。App ID 以 “cli_” 开头。',
+    manualScopeNote:
+      '别忘了把应用的「事件订阅」设为长连接（WebSocket）模式——扫码创建的应用会自动开启，手动创建的应用需要自己去开；否则凭据能校验通过，但 bot 收不到任何消息。',
     appIdPrompt: 'App ID：',
     appIdInvalid: '这看起来不像 App ID。它以 “cli_” 开头，请完整复制。',
+    appIdExhausted: '多次输入都不像合法的 App ID，先到开发者后台核对后再重新运行本命令。',
     secretPrompt: 'App Secret：',
     secretHidden: '（粘贴时屏幕上不会出现任何字符，这是正常的。粘贴后直接回车。）',
     secretEmpty: '没有读到内容，请再粘贴一次。',
+    secretExhausted: '一直没有读到 App Secret。准备好之后再重新运行本命令。',
     validating: '正在校验凭据…',
     validationFailed: (reason) => `✗ 凭据未通过校验：${reason}`,
     tenantCorrected: (brand) => `这组凭据属于${brand}，已自动改用它。`,
@@ -942,14 +955,20 @@ export const en: Messages = {
     qrFailed: (reason) => `The QR step did not finish: ${reason}`,
     offerManualAfterQrFailure:
       'Some organizations do not allow creating apps by scanning. If yours is one, create the app in the developer console and paste its credentials here instead.',
+    confirmManualNow: "Enter that app's App ID and Secret now?",
     manualIntro: 'Paste the credentials of the app you created.',
     manualWhereToFind:
       'Developer console → your app → Credentials & Basic Info. The App ID starts with "cli_".',
+    manualScopeNote:
+      "Also check Event Subscription is set to a long connection (WebSocket) — the QR flow turns this on automatically, but a console-created app needs it by hand, or the bot will validate fine and never see a message.",
     appIdPrompt: 'App ID: ',
     appIdInvalid: 'That does not look like an App ID. It starts with "cli_" — copy the whole value.',
+    appIdExhausted:
+      "That still doesn't look like an App ID. Check it in the developer console, then run this command again.",
     secretPrompt: 'App Secret: ',
     secretHidden: '(Nothing appears on screen as you paste — that is normal. Paste it and press Enter.)',
     secretEmpty: 'Nothing came through. Paste it again.',
+    secretExhausted: 'Still no App Secret came through. Run this command again once you have it copied.',
     validating: 'Checking the credentials…',
     validationFailed: (reason) => `✗ Those credentials were rejected: ${reason}`,
     tenantCorrected: (brand) => `These credentials belong to ${brand} — using that instead.`,
@@ -1427,14 +1446,20 @@ export const vi: Messages = {
     qrFailed: (reason) => `Bước quét mã QR chưa xong: ${reason}`,
     offerManualAfterQrFailure:
       'Một số công ty không cho tạo ứng dụng bằng cách quét mã. Nếu công ty bạn như vậy, hãy vào trang lập trình viên tạo ứng dụng rồi dán thông tin của nó vào đây.',
+    confirmManualNow: 'Nhập App ID và App Secret của ứng dụng đó ngay bây giờ?',
     manualIntro: 'Dán thông tin của ứng dụng bạn vừa tạo.',
     manualWhereToFind:
       'Trang lập trình viên → ứng dụng của bạn → mục thông tin cơ bản. App ID bắt đầu bằng “cli_”.',
+    manualScopeNote:
+      'Nhớ bật mục Event Subscription (đăng ký sự kiện) ở chế độ kết nối dài hạn (long connection/WebSocket) — luồng quét QR tự bật sẵn, còn ứng dụng tạo tay thì bạn phải tự bật; không thì thông tin vẫn xác thực được, nhưng bot sẽ không nhận được tin nhắn nào.',
     appIdPrompt: 'App ID: ',
     appIdInvalid: 'Cái này trông không giống App ID. Nó bắt đầu bằng “cli_” — hãy copy trọn giá trị.',
+    appIdExhausted:
+      'Vẫn không giống App ID. Kiểm tra lại trong trang lập trình viên rồi chạy lệnh này lần nữa.',
     secretPrompt: 'App Secret: ',
     secretHidden: '(Dán vào sẽ không thấy chữ nào hiện lên — bình thường thôi. Cứ dán rồi bấm Enter.)',
     secretEmpty: 'Chưa nhận được gì. Bạn dán lại giúp nhé.',
+    secretExhausted: 'Vẫn chưa nhận được App Secret. Khi nào copy sẵn rồi thì chạy lại lệnh này.',
     validating: 'Đang kiểm tra thông tin…',
     validationFailed: (reason) => `✗ Thông tin bị từ chối: ${reason}`,
     tenantCorrected: (brand) => `Thông tin này thuộc ${brand} — đã tự chuyển sang dùng ${brand}.`,

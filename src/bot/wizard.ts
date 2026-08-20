@@ -85,17 +85,25 @@ export async function requestScopeGrantLink(opts: {
  *
  * @param tenant Brand to create the app on. Defaults to {@link DEFAULT_TENANT}
  *   (Lark international); pass `feishu` for a China tenant.
+ * @param opts.showSwitchHint Whether to print the "wrong one? switch to
+ *   Feishu" hint. Only meaningful when `tenant` was *assumed* rather than
+ *   answered — e.g. a non-interactive first run that silently defaults to
+ *   Lark. When the operator was just asked (an interactive brand picker, or
+ *   an explicit `--tenant` flag) the hint second-guesses an answer they gave
+ *   one step ago, so callers that already asked pass `false`.
  */
 export async function runRegistrationWizard(
   tenant: TenantBrand = DEFAULT_TENANT,
+  opts: { showSwitchHint?: boolean } = {},
 ): Promise<AppConfig> {
+  const showSwitchHint = opts.showSwitchHint ?? true;
   const m = t().wizard;
   console.log(`\n${m.noAppConfig}\n`);
   // Say which brand this QR belongs to before it renders. Scanning with the
   // wrong app is the single most common first-run failure, and the QR itself
   // gives no clue which console it leads to.
   console.log(tenant === 'feishu' ? m.tenantFeishu : m.tenantLark);
-  if (tenant !== 'feishu') console.log(`${m.switchToFeishuHint}\n`);
+  if (tenant !== 'feishu' && showSwitchHint) console.log(`${m.switchToFeishuHint}\n`);
 
   const result = await registerApp({
     source: 'lark-channel-bridge',

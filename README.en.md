@@ -448,6 +448,8 @@ Cloud-doc comments do not need a separate workspace binding or document allowlis
 
 **I pasted my App Secret and nothing appeared on screen.** That is the prompt hiding it, not a hang. Paste and press Enter.
 
+**Credentials for a console-created app check out, but the bot never sees a message.** The QR wizard enables the app's Event Subscription (long-connection/WebSocket delivery) automatically; an app created by hand in the developer console needs that turned on manually, or messages simply never arrive.
+
 ## Testing and CI
 
 Local checks:

@@ -2,14 +2,22 @@ import * as p from '@clack/prompts';
 import { DEFAULT_TENANT, runRegistrationWizard } from '../bot/wizard';
 import type { AppConfig, TenantBrand } from '../config/schema';
 import { getLang, t } from '../i18n';
-import { validateAppCredentialsAnyTenant } from '../utils/feishu-auth';
+import { validateAppCredentials, validateAppCredentialsAnyTenant } from '../utils/feishu-auth';
 import { promptLine, promptPassword } from './prompt';
 
-/** How many times we re-ask for credentials before giving up on the run. */
+/** How many times we re-ask for App ID + Secret before giving up on the run. */
 const MAX_CREDENTIAL_ATTEMPTS = 3;
 
-/** Bounded on its own so a fat-fingered paste never eats a whole attempt. */
+/** Bounded on its own so a malformed App ID never reaches the network. */
 const MAX_APP_ID_ATTEMPTS = 3;
+
+/**
+ * Bounded separately from {@link MAX_CREDENTIAL_ATTEMPTS}: a muted prompt is
+ * easy to paste past (common over SSH or a Windows terminal), and an empty
+ * paste is not a wrong secret. Retrying it here costs nothing — no request
+ * goes out, and the App ID already entered is not re-asked.
+ */
+const MAX_SECRET_ATTEMPTS = 3;
 
 /**
  * Both brands mint custom-app identifiers in this shape. Checking it locally
@@ -21,11 +29,19 @@ const APP_ID_PATTERN = /^cli_[A-Za-z0-9_-]+$/;
 
 export type SetupPath = 'qr-lark' | 'qr-feishu' | 'manual';
 
-/** Cancellation is a choice, not a crash — callers exit quietly on this. */
+/**
+ * Cancellation is a choice, not a crash — callers exit quietly on this.
+ *
+ * The `name` is `UserCancelledError`, not `SetupCancelledError`: that is the
+ * string `src/cli/index.ts`'s top-level catch already special-cases (it is
+ * also what the sibling agent picker in `profile-runtime.ts` throws), so
+ * Ctrl-C here prints the cancellation message once and exits 0, instead of
+ * printing it via `p.cancel()` and then again as an uncaught `Error:`.
+ */
 export class SetupCancelledError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'SetupCancelledError';
+    this.name = 'UserCancelledError';
   }
 }
 
@@ -58,12 +74,19 @@ export async function runFirstRunAppSetup(opts: {
   interactive?: boolean;
 }): Promise<AppConfig> {
   const interactive = opts.interactive ?? true;
-  if (opts.tenant) return runQrSetup(opts.tenant, interactive);
-  if (!interactive) return runQrSetup(DEFAULT_TENANT, false);
+  // `askedBrand` tracks whether *this call* already answered the brand
+  // question — via an explicit `--tenant` or the picker below — so
+  // `runQrSetup` knows whether the wizard's own "wrong one?" hint would be
+  // useful (nobody was asked) or redundant (they were just asked).
+  if (opts.tenant) return runQrSetup(opts.tenant, interactive, true);
+  if (!interactive) return runQrSetup(DEFAULT_TENANT, false, false);
 
   const path = await askSetupPath();
-  if (path === 'manual') return promptExistingAppCredentials(defaultTenantForLocale());
-  return runQrSetup(path === 'qr-feishu' ? 'feishu' : 'lark', true);
+  // The brand question was never asked for the manual path — the operator's
+  // pasted credentials answer it instead, so `tenantKnown` stays false and
+  // both hosts get checked.
+  if (path === 'manual') return promptExistingAppCredentials(defaultTenantForLocale(), false);
+  return runQrSetup(path === 'qr-feishu' ? 'feishu' : 'lark', true, true);
 }
 
 /**
@@ -75,17 +98,25 @@ export async function runFirstRunAppSetup(opts: {
  * failure keeps them in the same terminal session instead of sending them to
  * the README to find a flag.
  */
-async function runQrSetup(tenant: TenantBrand, interactive: boolean): Promise<AppConfig> {
+async function runQrSetup(
+  tenant: TenantBrand,
+  interactive: boolean,
+  askedBrand: boolean,
+): Promise<AppConfig> {
   try {
-    return await runRegistrationWizard(tenant);
+    return await runRegistrationWizard(tenant, { showSwitchHint: !askedBrand });
   } catch (err) {
     if (!interactive) throw err;
     const m = t().setup;
     console.log(`\n${m.qrFailed(err instanceof Error ? err.message : String(err))}`);
     console.log(`${m.offerManualAfterQrFailure}\n`);
-    const proceed = await p.confirm({ message: m.pathManual, initialValue: false });
+    const proceed = await p.confirm({ message: m.confirmManualNow, initialValue: false });
     if (p.isCancel(proceed) || !proceed) throw err;
-    return promptExistingAppCredentials(tenant);
+    // `tenant` here is what the operator already told us — an explicit
+    // `--tenant`, or the brand they just picked — so only that host is
+    // checked. Replaying a typo'd secret against the other brand's host
+    // would send it somewhere it was never meant to go.
+    return promptExistingAppCredentials(tenant, true);
   }
 }
 
@@ -104,7 +135,13 @@ async function askSetupPath(): Promise<SetupPath> {
   });
   if (p.isCancel(choice)) {
     p.cancel(m.cancelled);
-    throw new SetupCancelledError(m.cancelled);
+    // A distinct message for the thrown error, not `m.cancelled` again: the
+    // top-level catch in `cli/index.ts` prints whatever this error carries,
+    // and printing the same "Setup cancelled." p.cancel() just showed would
+    // read as the same line twice. `bootstrap.startCancelled` is the generic
+    // "the run stopped here" message already used by the sibling agent
+    // picker for the same reason.
+    throw new SetupCancelledError(t().bootstrap.startCancelled);
   }
   // Close the prompt block before the QR code takes over the terminal. No
   // message: the picker already leaves the chosen label on screen, and the
@@ -120,27 +157,34 @@ async function askSetupPath(): Promise<SetupPath> {
  * being wrong: values are cleaned of the label and quotes that come along when
  * you copy a row out of a console, the muted secret prompt says up front that
  * it will show nothing, and a rejection re-asks in place instead of ending the
- * process with a stack trace. The brand is not asked for at all — the
- * credentials know which one they belong to.
+ * process with a stack trace.
+ *
+ * @param preferred Brand to validate against first — or, when `tenantKnown`,
+ *   the *only* brand checked.
+ * @param tenantKnown True when the operator already told us the brand (an
+ *   explicit `--tenant`, or a QR attempt on `preferred` that failed for an
+ *   unrelated reason): only `preferred` is checked, so a typo'd secret is
+ *   never replayed against the other brand's host. False (the top-level
+ *   "I already created an app" choice, where nothing about the brand is
+ *   known) checks both hosts and keeps whichever accepts the credentials.
  */
 export async function promptExistingAppCredentials(
   preferred: TenantBrand = DEFAULT_TENANT,
+  tenantKnown = false,
 ): Promise<AppConfig> {
   const m = t().setup;
   console.log(`\n${m.manualIntro}`);
   console.log(`${m.manualWhereToFind}\n`);
+  console.log(`${m.manualScopeNote}\n`);
 
   for (let attempt = 1; attempt <= MAX_CREDENTIAL_ATTEMPTS; attempt += 1) {
     const appId = await promptAppId();
-    console.log(m.secretHidden);
-    const appSecret = normalizePastedValue(await promptPassword(m.secretPrompt));
-    if (!appSecret) {
-      console.log(`${m.secretEmpty}\n`);
-      continue;
-    }
+    const appSecret = await promptSecret();
 
     console.log(m.validating);
-    const result = await validateAppCredentialsAnyTenant(appId, appSecret, preferred);
+    const result = tenantKnown
+      ? { ...(await validateAppCredentials(appId, appSecret, preferred)), tenant: preferred }
+      : await validateAppCredentialsAnyTenant(appId, appSecret, preferred);
     if (result.ok) {
       if (result.tenant !== preferred) console.log(m.tenantCorrected(brandLabel(result.tenant)));
       console.log(
@@ -160,16 +204,31 @@ export async function promptExistingAppCredentials(
 
 async function promptAppId(): Promise<string> {
   const m = t().setup;
-  let last = '';
   for (let attempt = 1; attempt <= MAX_APP_ID_ATTEMPTS; attempt += 1) {
-    last = normalizePastedValue(await promptLine(m.appIdPrompt));
-    if (APP_ID_PATTERN.test(last)) return last;
+    const value = normalizePastedValue(await promptLine(m.appIdPrompt));
+    if (APP_ID_PATTERN.test(value)) return value;
     console.log(m.appIdInvalid);
   }
-  // Out of retries: hand the last value to the server anyway rather than
-  // failing on our own guess at the format. If it really is an App ID in a
-  // shape we don't know, the token exchange is the honest place to find out.
-  return last;
+  // Out of retries: fail clearly rather than sending a value we already know
+  // is not shaped like an App ID (possibly empty) into a live token request.
+  throw new Error(m.appIdExhausted);
+}
+
+/**
+ * Prompt for the App Secret, retrying on an empty paste without touching the
+ * caller's credential-attempt budget or asking for the App ID again. A muted
+ * prompt is easy to paste past — especially over SSH or a Windows terminal —
+ * and a blank paste is not a wrong secret.
+ */
+async function promptSecret(): Promise<string> {
+  const m = t().setup;
+  console.log(m.secretHidden);
+  for (let attempt = 1; attempt <= MAX_SECRET_ATTEMPTS; attempt += 1) {
+    const secret = normalizePastedValue(await promptPassword(m.secretPrompt));
+    if (secret) return secret;
+    console.log(`${m.secretEmpty}\n`);
+  }
+  throw new Error(m.secretExhausted);
 }
 
 /**
@@ -192,7 +251,11 @@ export function normalizePastedValue(raw: string): string {
  * Brand to lead with when nobody has said. A Chinese-locale terminal is a
  * strong hint of a feishu.cn tenant; everyone else gets Lark, which is what
  * this fork exists for.
+ *
+ * Exported so the bare `--app-id` bootstrap path (no `--tenant`) leads with
+ * the same locale-aware guess as the interactive picker, instead of always
+ * trying Lark first regardless of locale.
  */
-function defaultTenantForLocale(): TenantBrand {
+export function defaultTenantForLocale(): TenantBrand {
   return getLang() === 'zh' ? 'feishu' : DEFAULT_TENANT;
 }

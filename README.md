@@ -141,6 +141,8 @@ lark-channel-bridge --lang vi run
 **Công ty bạn chặn tạo ứng dụng bằng cách quét mã?** Có công ty bắt phải tự tạo trong trang lập trình viên. Khi đó cứ tạo ứng dụng ở đó rồi chọn **mục thứ ba**: terminal sẽ hỏi App ID và App Secret, kiểm tra ngay tại chỗ, và **tự nhận ra ứng dụng của bạn thuộc Lark hay Feishu** — bạn không phải gõ thêm gì trên dòng lệnh, cũng không cần biết "tenant" là gì.
 
 > Chỗ nhập App Secret sẽ **không hiện chữ nào** khi bạn dán vào. Đây là bình thường (để người ngồi cạnh không đọc trộm được), không phải máy bị treo — cứ dán rồi bấm Enter.
+>
+> Terminal cũng sẽ nhắc bạn bật mục **Event Subscription** (đăng ký sự kiện) ở chế độ **kết nối dài hạn** trong trang lập trình viên. Luồng quét QR tự bật sẵn, còn ứng dụng tự tạo thì phải tự bật — thiếu bước này thì thông tin vẫn xác thực được, nhưng bot sẽ **không nhận được tin nhắn nào**.
 
 Chạy nền để khỏi phải mở terminal suốt:
 

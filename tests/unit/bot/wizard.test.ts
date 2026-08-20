@@ -91,6 +91,29 @@ describe('registration wizard tenant host', () => {
     const printed = log.mock.calls.map((c) => String(c[0])).join('\n');
     expect(printed).not.toContain('--tenant feishu');
   });
+
+  it('suppresses the switch hint when the caller already asked the brand question', async () => {
+    // The interactive brand picker (src/cli/app-setup.ts) and an explicit
+    // --tenant flag both already answer this; printing "wrong one? switch to
+    // Feishu" one line later second-guesses an answer just given.
+    sdk.registerApp.mockResolvedValue(scanResult('lark'));
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    await runRegistrationWizard('lark', { showSwitchHint: false });
+
+    const printed = log.mock.calls.map((c) => String(c[0])).join('\n');
+    expect(printed).not.toContain('--tenant feishu');
+  });
+
+  it('shows the switch hint by default, for callers that never asked', async () => {
+    sdk.registerApp.mockResolvedValue(scanResult('lark'));
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    await runRegistrationWizard('lark');
+
+    const printed = log.mock.calls.map((c) => String(c[0])).join('\n');
+    expect(printed).toContain('--tenant feishu');
+  });
 });
 
 describe('incremental scope grant link', () => {

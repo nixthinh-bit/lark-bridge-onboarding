@@ -52,6 +52,9 @@ vi.mock('../../../src/bot/wizard', () => ({
 vi.mock('../../../src/cli/app-setup', () => ({
   runFirstRunAppSetup: vi.fn(async () => wizard.next),
   brandLabel: (tenant: string) => tenant,
+  // Matches the real implementation's fallback (non-'zh' -> 'lark') closely
+  // enough for these tests, which don't exercise the locale switch itself.
+  defaultTenantForLocale: () => 'lark',
 }));
 
 vi.mock('../../../src/utils/feishu-auth', () => ({

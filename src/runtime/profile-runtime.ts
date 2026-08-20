@@ -3,7 +3,7 @@ import { dirname } from 'node:path';
 import * as p from '@clack/prompts';
 import { DEFAULT_TENANT } from '../bot/wizard';
 import { detectInstalledAgents, type DetectedAgent } from '../cli/agent-detection';
-import { brandLabel, runFirstRunAppSetup } from '../cli/app-setup';
+import { brandLabel, defaultTenantForLocale, runFirstRunAppSetup } from '../cli/app-setup';
 import { t } from '../i18n';
 import {
   createBootstrapCodexConfig,
@@ -455,13 +455,18 @@ async function resolveBootstrapAppConfig(opts: ResolveProfileRuntimeOptions): Pr
   const requested = requestedTenantBrand(opts.tenant);
   // `--tenant` is taken at its word; an unstated brand is a question the two
   // hosts can answer between them, so nobody is rejected for guessing wrong.
+  // The locale-aware guess (not a hardcoded `DEFAULT_TENANT`) matches the
+  // interactive picker, so a zh-locale Feishu operator on `--app-id` is not
+  // charged a wasted larksuite.com round trip or told their brand was
+  // "corrected" when they never stated one to begin with.
+  const preferredTenant = defaultTenantForLocale();
   const result = requested
     ? { ...(await validateAppCredentials(opts.appId, appSecret, requested)), tenant: requested }
-    : await validateAppCredentialsAnyTenant(opts.appId, appSecret, DEFAULT_TENANT);
+    : await validateAppCredentialsAnyTenant(opts.appId, appSecret, preferredTenant);
   if (!result.ok) {
     throw new Error(`app credentials validation failed: ${result.reason ?? 'unknown'}`);
   }
-  if (!requested && result.tenant !== DEFAULT_TENANT) {
+  if (!requested && result.tenant !== preferredTenant) {
     console.log(t().setup.tenantCorrected(brandLabel(result.tenant)));
   }
   if (result.botName) {
