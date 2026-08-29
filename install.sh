@@ -15,17 +15,15 @@
 #
 # Environment:
 #   LARK_CHANNEL_LANG=vi|en        force the language (default: your OS locale)
-#   LARK_BRIDGE_NPM_PREFIX=<dir>   install somewhere other than the npm global
-#                                  root. Only the final install honours it; it
-#                                  deliberately does not reach the temp build,
-#                                  where an inherited npm prefix would send dev
-#                                  dependencies to the wrong place and break the
-#                                  build. Used by this project's own tests.
+#   LARK_BRIDGE_NPM_PREFIX=<dir>   pass through to `npm i -g --prefix <dir>` so
+#                                  the bridge installs somewhere other than the
+#                                  npm global root. Used by this project's own
+#                                  tests.
 
 set -euo pipefail
 
 REPO="nixthinh-bit/lark-bridge-onboarding"
-PKG="github:${REPO}"
+NPM_PKG="lark-bridge-onboarding"
 BIN="lark-channel-bridge"
 CLAUDE_PKG="@anthropic-ai/claude-code"
 LARK_CLI_ONBOARDING="https://github.com/nixthinh-bit/lark-cli-onboarding"
@@ -217,8 +215,8 @@ step "$(vi && echo '4/4  Cài bridge' || echo '4/4  Installing the bridge')"
 if have "$BIN"; then
   EXISTING="$($BIN --version 2>/dev/null | head -1 || echo '?')"
   if vi; then
-    warn "Đã có sẵn ${BIN} (phiên bản ${EXISTING}) — bản này sẽ ĐÈ lên."
-    info 'Fork này dùng chung tên lệnh với bản gốc, nên nó là bản thay thế drop-in.'
+    warn "Đã có sẵn lệnh ${BIN} (phiên bản ${EXISTING}) — bản này sẽ ĐÈ lên."
+    info 'Fork này dùng chung tên lệnh với bản gốc nên là bản thay thế drop-in.'
     info 'Mọi lệnh cũ vẫn chạy y hệt. Quay về bản gốc: npm i -g lark-channel-bridge'
   else
     warn "${BIN} is already installed (version ${EXISTING}) — this will REPLACE it."
@@ -227,46 +225,18 @@ if have "$BIN"; then
   fi
 fi
 
-# Why not `npm i -g github:…`? Because it does not work. Installing a git
-# dependency makes npm clone the repo and run `prepare` (which builds with
-# tsup) — but under `-g` the nested install never lands tsup, and the build
-# dies with `sh: tsup: command not found`. The same source installs fine
-# locally, so the fix is to do the three steps ourselves, in a temp clone:
-# install dev deps, build, then install the built tree globally with scripts
-# off (dist already exists; re-running `prepare` would just reintroduce the
-# same failure).
-
-have git || die "$(vi \
-  && echo 'Cần git để tải mã nguồn. macOS: xcode-select --install' \
-  || echo 'git is required to fetch the source. macOS: xcode-select --install')"
-
-WORK="$(mktemp -d)"
-# shellcheck disable=SC2064
-trap "rm -rf '$WORK'" EXIT
-
-info "$(vi && echo 'Đang tải mã nguồn…' || echo 'Fetching the source…')"
-git clone -q --depth 1 "https://github.com/${REPO}.git" "$WORK/src"
-
-info "$(vi && echo 'Đang cài thư viện…' || echo 'Installing dependencies…')"
-(cd "$WORK/src" && npm install --silent --ignore-scripts >/dev/null)
-
-info "$(vi && echo 'Đang biên dịch…' || echo 'Building…')"
-(cd "$WORK/src" && npm run build >/dev/null 2>&1) \
-  || die "$(vi && echo 'Biên dịch thất bại. Hãy mở issue kèm nội dung lỗi.' || echo 'Build failed. Please open an issue with the output.')"
-
-info "$(vi && echo 'Đang đóng gói…' || echo 'Packing…')"
-# Pack to a tarball first. `npm i -g <dir>` symlinks the directory rather than
-# copying it, so the install would point into this temp clone and break the
-# moment the trap below removes it — a dead symlink, with no error at install
-# time. A tarball is copied, so the install stands on its own.
-(cd "$WORK/src" && npm pack --silent --ignore-scripts --pack-destination "$WORK" >/dev/null)
-TARBALL="$(find "$WORK" -maxdepth 1 -name '*.tgz' | head -1)"
-[ -n "$TARBALL" ] || die "$(vi && echo 'Đóng gói thất bại.' || echo 'Packing failed.')"
+# The fork is published to npm as `lark-bridge-onboarding` with the built `dist/`
+# already in the tarball, so this is a plain download — no git, no local build,
+# no compiler. That is the whole reason it now installs the same way upstream
+# does. `bin` is still `lark-channel-bridge`, so the command name is unchanged.
 
 info "$(vi && echo 'Đang cài đặt…' || echo 'Installing…')"
 PREFIX_FLAG=()
 [ -n "${LARK_BRIDGE_NPM_PREFIX:-}" ] && PREFIX_FLAG=(--prefix "$LARK_BRIDGE_NPM_PREFIX")
-npm i -g "${PREFIX_FLAG[@]+"${PREFIX_FLAG[@]}"}" --ignore-scripts "$TARBALL" >/dev/null
+npm i -g "${PREFIX_FLAG[@]+"${PREFIX_FLAG[@]}"}" "${NPM_PKG}@latest" >/dev/null 2>&1 \
+  || die "$(vi \
+    && echo "Cài thất bại. Thử chạy thẳng: npm i -g ${NPM_PKG}" \
+    || echo "Install failed. Try running it directly: npm i -g ${NPM_PKG}")"
 
 have "$BIN" || die "$(vi && echo "Cài xong nhưng không thấy lệnh ${BIN} trong PATH. Hãy mở terminal mới." || echo "Installed, but ${BIN} is not on PATH. Open a new terminal.")"
 ok "$BIN $($BIN --version 2>/dev/null | head -1 || echo '')"

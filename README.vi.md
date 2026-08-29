@@ -82,33 +82,26 @@ Cài trước thì tránh hẳn được cái bẫy đó:
 
 👉 **[github.com/nixthinh-bit/lark-cli-onboarding](https://github.com/nixthinh-bit/lark-cli-onboarding)** — cài lark-cli, skill, và tự động gia hạn token.
 
-## 4. Cài bridge — một lệnh
+## 4. Cài bridge
+
+```bash
+npm i -g lark-bridge-onboarding
+```
+
+Chỉ vậy thôi. Gói này đã kèm sẵn bản biên dịch bên trong, nên không có bước build, không phải clone gì cả, chạy giống nhau trên macOS, Linux và Windows. Tên lệnh sau khi cài vẫn là `lark-channel-bridge`.
+
+<details>
+<summary>Muốn trình cài đặt lo luôn cả Claude Code?</summary>
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/nixthinh-bit/lark-bridge-onboarding/main/install.sh | bash
 ```
 
-Lệnh này sẽ: kiểm tra Node.js → kiểm tra Claude Code (thiếu thì **hỏi** bạn có muốn cài không) → nhắc về lark-cli nếu chưa có → cài bridge → chỉ bạn bước tiếp theo. Nó **không bao giờ** tự cài Node.js hay lark-cli mà không hỏi.
-
-Muốn giao diện cài bằng tiếng Anh: thêm `LARK_CHANNEL_LANG=en` vào trước `curl`.
-
-> ⚠️ **Nếu bạn đã cài bản gốc của Zara**: lệnh trên **đè lên bản đó**, vì hai bản dùng chung tên lệnh `lark-channel-bridge`. Đây là bản thay thế drop-in — mọi lệnh của bản gốc vẫn chạy y hệt. Muốn quay về bản gốc: `npm i -g lark-channel-bridge`. Chưa từng nghe tới bản gốc thì cứ bỏ qua đoạn này.
-
-<details>
-<summary>Không thích <code>curl | bash</code>? Cài tay như sau</summary>
-
-```bash
-git clone https://github.com/nixthinh-bit/lark-bridge-onboarding
-cd lark-bridge-onboarding
-npm install     # cài thư viện, đồng thời tự biên dịch
-npm i -g .      # cài toàn cục
-```
-
-⚠️ Cách này liên kết tới chính thư mục vừa clone, nên **đừng xoá hay di chuyển nó** sau khi cài.
-
-Và **đừng dùng `npm i -g github:nixthinh-bit/lark-bridge-onboarding`** — nghe hợp lý nhưng **không chạy**: npm sẽ clone rồi cố biên dịch, nhưng ở chế độ `-g` nó không đặt được công cụ biên dịch đúng chỗ, kết quả là `tsup: command not found`. Đây chính là lý do `install.sh` tồn tại.
+Kết quả như trên, thêm phần: kiểm tra Node.js → kiểm tra Claude Code (thiếu thì **hỏi** bạn có muốn cài không) → nhắc về lark-cli nếu chưa có. Chỉ chạy trên macOS/Linux (đây là script bash). Muốn giao diện tiếng Anh: thêm `LARK_CHANNEL_LANG=en` vào trước `curl`.
 
 </details>
+
+> ⚠️ **Nếu bạn đã cài bản gốc của Zara**: hai gói cùng cài ra lệnh `lark-channel-bridge`, nên bạn `npm i -g` bản nào sau thì dùng bản đó. Muốn quay về bản gốc: `npm i -g lark-channel-bridge`. Chưa từng nghe tới bản gốc thì cứ bỏ qua đoạn này.
 
 ## 5. Chạy lần đầu — quét QR là xong
 

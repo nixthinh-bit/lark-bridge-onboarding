@@ -96,17 +96,17 @@ describe('README runtime contract', () => {
 /**
  * Every user-visible README, concatenated.
  *
- * This fork made Vietnamese the landing page, so upstream's English reference
- * moved to README.en.md and README.md is now the Vietnamese walkthrough. All
- * three are read: the positive assertions find the reference text wherever it
- * now lives, and the negative ones ("don't document trusted directories") keep
- * applying to every language instead of silently skipping the new one.
+ * README.md is the English reference (the landing page), README.vi.md is the
+ * Vietnamese walkthrough, README.zh.md is upstream's Chinese doc. All three are
+ * read: the positive assertions find the reference text wherever it lives, and
+ * the negative ones ("don't document trusted directories") keep applying to
+ * every language instead of silently skipping one.
  */
 async function readDocs(): Promise<string> {
-  const [vi, en, zh] = await Promise.all([
+  const [en, vi, zh] = await Promise.all([
     readFile(new URL('../../../README.md', import.meta.url), 'utf8'),
-    readFile(new URL('../../../README.en.md', import.meta.url), 'utf8'),
+    readFile(new URL('../../../README.vi.md', import.meta.url), 'utf8'),
     readFile(new URL('../../../README.zh.md', import.meta.url), 'utf8'),
   ]);
-  return `${vi}\n${en}\n${zh}`;
+  return `${en}\n${vi}\n${zh}`;
 }

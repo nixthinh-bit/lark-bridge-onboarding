@@ -1,7 +1,7 @@
 {
-  "name": "lark-channel-bridge",
-  "version": "0.5.9",
-  "description": "Bridge Feishu/Lark messenger with local CLI coding agents",
+  "name": "lark-bridge-onboarding",
+  "version": "0.6.0",
+  "description": "No-code onboarding fork of lark-channel-bridge: one-command install, bilingual (English / Tiếng Việt) wizard, defaults to Lark international",
   "type": "module",
   "packageManager": "pnpm@10.33.0",
   "publishConfig": {
@@ -33,6 +33,7 @@
     "dist",
     "bin",
     "README.md",
+    "README.vi.md",
     "README.zh.md",
     "LICENSE"
   ],
@@ -47,7 +48,7 @@
     "ci:local": "git diff --check && pnpm test && pnpm typecheck && pnpm build",
     "ci:platform": "pnpm test && pnpm typecheck && pnpm build",
     "prepare": "npm run build",
-    "prepublishOnly": "pnpm typecheck && pnpm build"
+    "prepublishOnly": "npm run typecheck && npm run build"
   },
   "dependencies": {
     "@clack/prompts": "^1.4.0",

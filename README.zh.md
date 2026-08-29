@@ -38,10 +38,12 @@
 ## 安装
 
 ```bash
-npm i -g lark-channel-bridge
+npm i -g lark-bridge-onboarding
 # 或
-pnpm add -g lark-channel-bridge
+pnpm add -g lark-bridge-onboarding
 ```
+
+> 本仓库是 [zarazhangrui/lark-coding-agent-bridge](https://github.com/zarazhangrui/lark-coding-agent-bridge) 的 fork，发布名为 `lark-bridge-onboarding`，安装后的命令仍是 `lark-channel-bridge`。包内已含构建产物，安装即用，无需本地编译。想用原版：`npm i -g lark-channel-bridge`。
 
 ## 首次启动
 

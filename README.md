@@ -66,31 +66,26 @@ claude auth login
 
 The bridge can auto-install lark-cli, **but only in interactive mode**. Start it as a background service first and it silently skips that step, leaving you wondering why the bot can't reach Lark. Installing lark-cli up front avoids the trap entirely: **[lark-cli-onboarding](https://github.com/nixthinh-bit/lark-cli-onboarding)**.
 
-### 4. Install — one command
+### 4. Install
+
+```bash
+npm i -g lark-bridge-onboarding
+```
+
+That is the whole install. The package ships with the build already inside it, so there is no compiler step and nothing to clone — it works the same on macOS, Linux, and Windows. The command it installs is still `lark-channel-bridge`.
+
+<details>
+<summary>Want the installer to set up Claude Code too?</summary>
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/nixthinh-bit/lark-bridge-onboarding/main/install.sh | bash
 ```
 
-It checks Node.js, checks Claude Code (and **asks** before installing it), points you at lark-cli if it's missing, installs the bridge, and tells you what to do next. It never installs Node.js or lark-cli behind your back. Prefix with `LARK_CHANNEL_LANG=vi` for Vietnamese.
-
-> ⚠️ **Already have upstream installed?** This **replaces** it — both share the `lark-channel-bridge` command name. It is a drop-in replacement, so every upstream command still works. To go back: `npm i -g lark-channel-bridge`.
-
-<details>
-<summary>Prefer not to pipe <code>curl</code> into <code>bash</code>?</summary>
-
-```bash
-git clone https://github.com/nixthinh-bit/lark-bridge-onboarding
-cd lark-bridge-onboarding
-npm install     # installs dependencies and builds
-npm i -g .      # install globally
-```
-
-⚠️ This links against the clone, so **don't delete or move it** afterwards.
-
-And **don't reach for `npm i -g github:nixthinh-bit/lark-bridge-onboarding`** — it looks right but **does not work**: npm clones the repo and runs the build, but under `-g` the build tool never lands, so it dies with `tsup: command not found`. That failure is precisely why `install.sh` exists.
+Same result, plus it checks Node.js, checks Claude Code (and **asks** before installing it), and points you at lark-cli if it's missing. macOS/Linux only (it's a bash script). Prefix with `LARK_CHANNEL_LANG=vi` for Vietnamese.
 
 </details>
+
+> ⚠️ **Already have upstream installed?** Both packages install the same `lark-channel-bridge` command, so whichever you ran `npm i -g` for last is the one you get. To go back to upstream: `npm i -g lark-channel-bridge`.
 
 ### 5. First run — just scan the QR code
 
