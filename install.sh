@@ -24,6 +24,7 @@ set -euo pipefail
 
 REPO="nixthinh-bit/lark-bridge-onboarding"
 NPM_PKG="lark-bridge-onboarding"
+UPSTREAM_PKG="lark-channel-bridge"
 BIN="lark-channel-bridge"
 CLAUDE_PKG="@anthropic-ai/claude-code"
 LARK_CLI_ONBOARDING="https://github.com/nixthinh-bit/lark-cli-onboarding"
@@ -212,31 +213,50 @@ fi
 
 step "$(vi && echo '4/4  Cài bridge' || echo '4/4  Installing the bridge')"
 
-if have "$BIN"; then
+PREFIX_FLAG=()
+[ -n "${LARK_BRIDGE_NPM_PREFIX:-}" ] && PREFIX_FLAG=(--prefix "$LARK_BRIDGE_NPM_PREFIX")
+npm_g() { npm "$@" -g "${PREFIX_FLAG[@]+"${PREFIX_FLAG[@]}"}"; }
+
+UPSTREAM_INSTALLED=0
+npm_g ls "$UPSTREAM_PKG" --depth=0 >/dev/null 2>&1 && UPSTREAM_INSTALLED=1
+
+if [ "$UPSTREAM_INSTALLED" -eq 1 ]; then
   EXISTING="$($BIN --version 2>/dev/null | head -1 || echo '?')"
   if vi; then
     warn "Đã có sẵn lệnh ${BIN} (phiên bản ${EXISTING}) — bản này sẽ ĐÈ lên."
     info 'Fork này dùng chung tên lệnh với bản gốc nên là bản thay thế drop-in.'
-    info 'Mọi lệnh cũ vẫn chạy y hệt. Quay về bản gốc: npm i -g lark-channel-bridge'
+    info "Mọi lệnh cũ vẫn chạy y hệt. Quay về bản gốc: npm rm -g ${NPM_PKG} && npm i -g ${UPSTREAM_PKG}"
   else
     warn "${BIN} is already installed (version ${EXISTING}) — this will REPLACE it."
     info 'This fork shares the upstream command name, so it is a drop-in replacement.'
-    info 'Every existing command still works. To go back: npm i -g lark-channel-bridge'
+    info "Every existing command still works. To go back: npm rm -g ${NPM_PKG} && npm i -g ${UPSTREAM_PKG}"
   fi
+fi
+
+# Both packages own the same `lark-channel-bridge` bin, and npm refuses to let
+# one global package overwrite another's bin (EEXIST). So the upstream package
+# has to go first — only it, and only when npm says it is installed. Its config
+# lives in ~/.lark-channel, not in the package, so nothing of the user's is lost.
+if [ "$UPSTREAM_INSTALLED" -eq 1 ]; then
+  info "$(vi && echo "Gỡ gói gốc ${UPSTREAM_PKG} (cấu hình của bạn được giữ nguyên)…" \
+               || echo "Removing upstream ${UPSTREAM_PKG} (your config is kept)…")"
+  npm_g rm "$UPSTREAM_PKG" >/dev/null \
+    || die "$(vi && echo "Không gỡ được ${UPSTREAM_PKG} (lỗi npm ở trên). Gỡ tay: npm rm -g ${UPSTREAM_PKG}, rồi chạy lại." \
+                 || echo "Could not remove ${UPSTREAM_PKG} (npm error above). Remove it by hand: npm rm -g ${UPSTREAM_PKG}, then run this again.")"
 fi
 
 # The fork is published to npm as `lark-bridge-onboarding` with the built `dist/`
 # already in the tarball, so this is a plain download — no git, no local build,
 # no compiler. That is the whole reason it now installs the same way upstream
 # does. `bin` is still `lark-channel-bridge`, so the command name is unchanged.
+# stdout is muted for a clean screen; stderr is not, so npm's own error (EACCES,
+# network, EEXIST…) is what the user sees when it fails.
 
 info "$(vi && echo 'Đang cài đặt…' || echo 'Installing…')"
-PREFIX_FLAG=()
-[ -n "${LARK_BRIDGE_NPM_PREFIX:-}" ] && PREFIX_FLAG=(--prefix "$LARK_BRIDGE_NPM_PREFIX")
-npm i -g "${PREFIX_FLAG[@]+"${PREFIX_FLAG[@]}"}" "${NPM_PKG}@latest" >/dev/null 2>&1 \
+npm_g i "${NPM_PKG}@latest" >/dev/null \
   || die "$(vi \
-    && echo "Cài thất bại. Thử chạy thẳng: npm i -g ${NPM_PKG}" \
-    || echo "Install failed. Try running it directly: npm i -g ${NPM_PKG}")"
+    && echo "Cài thất bại — xem lỗi npm ở trên. Sửa xong thì chạy lại, hoặc chạy thẳng: npm i -g ${NPM_PKG}" \
+    || echo "Install failed — see the npm error above. Fix it and run this again, or run: npm i -g ${NPM_PKG}")"
 
 have "$BIN" || die "$(vi && echo "Cài xong nhưng không thấy lệnh ${BIN} trong PATH. Hãy mở terminal mới." || echo "Installed, but ${BIN} is not on PATH. Open a new terminal.")"
 ok "$BIN $($BIN --version 2>/dev/null | head -1 || echo '')"

@@ -43,7 +43,7 @@ npm i -g lark-bridge-onboarding
 pnpm add -g lark-bridge-onboarding
 ```
 
-> 本仓库是 [zarazhangrui/lark-coding-agent-bridge](https://github.com/zarazhangrui/lark-coding-agent-bridge) 的 fork，发布名为 `lark-bridge-onboarding`，安装后的命令仍是 `lark-channel-bridge`。包内已含构建产物，安装即用，无需本地编译。想用原版：`npm i -g lark-channel-bridge`。
+> 本仓库是 [zarazhangrui/lark-coding-agent-bridge](https://github.com/zarazhangrui/lark-coding-agent-bridge) 的 fork，发布名为 `lark-bridge-onboarding`，安装后的命令仍是 `lark-channel-bridge`。包内已含构建产物，安装即用，无需本地编译。两个包安装的是同一个 `lark-channel-bridge` 命令，npm 不允许互相覆盖（会报 `EEXIST`），切换前需先卸载另一个。从原版切换过来：`npm rm -g lark-channel-bridge && npm i -g lark-bridge-onboarding`。想用原版：`npm rm -g lark-bridge-onboarding && npm i -g lark-channel-bridge`。配置保存在 `~/.lark-channel`，不受影响。
 
 ## 首次启动
 

@@ -101,7 +101,7 @@ Kết quả như trên, thêm phần: kiểm tra Node.js → kiểm tra Claude C
 
 </details>
 
-> ⚠️ **Nếu bạn đã cài bản gốc của Zara**: hai gói cùng cài ra lệnh `lark-channel-bridge`, nên bạn `npm i -g` bản nào sau thì dùng bản đó. Muốn quay về bản gốc: `npm i -g lark-channel-bridge`. Chưa từng nghe tới bản gốc thì cứ bỏ qua đoạn này.
+> ⚠️ **Nếu bạn đã cài bản gốc của Zara**: hai gói cùng cài ra lệnh `lark-channel-bridge`, và npm không cho gói này đè lên gói kia (sẽ báo lỗi `EEXIST`). Gỡ bản gốc trước: `npm rm -g lark-channel-bridge && npm i -g lark-bridge-onboarding`. Lệnh cài một dòng tự làm bước này cho bạn. Cấu hình trong `~/.lark-channel` được giữ nguyên. Muốn quay về bản gốc: `npm rm -g lark-bridge-onboarding && npm i -g lark-channel-bridge`. Chưa từng nghe tới bản gốc thì cứ bỏ qua đoạn này.
 
 ## 5. Chạy lần đầu — quét QR là xong
 

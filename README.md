@@ -85,7 +85,7 @@ Same result, plus it checks Node.js, checks Claude Code (and **asks** before ins
 
 </details>
 
-> ⚠️ **Already have upstream installed?** Both packages install the same `lark-channel-bridge` command, so whichever you ran `npm i -g` for last is the one you get. To go back to upstream: `npm i -g lark-channel-bridge`.
+> ⚠️ **Already have upstream installed?** Both packages install the same `lark-channel-bridge` command, and npm won't let one overwrite the other (you'd get `EEXIST`). Remove upstream first: `npm rm -g lark-channel-bridge && npm i -g lark-bridge-onboarding`. The one-command installer does this for you. Your config in `~/.lark-channel` is kept. To go back to upstream: `npm rm -g lark-bridge-onboarding && npm i -g lark-channel-bridge`.
 
 ### 5. First run — just scan the QR code
 
